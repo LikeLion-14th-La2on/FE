@@ -37,6 +37,9 @@ export const router = createBrowserRouter([
       { path: ROUTES.wrongNote, element: <WrongNotePage /> },
       { path: ROUTES.tools, element: <ToolsPage /> },
       { path: ROUTES.my, element: <MyPage /> },
+      // 용어사전은 하단 바 탭은 아니지만 Figma처럼 하단 바를 보여 준다
+      { path: ROUTES.glossary, element: <GlossaryPage /> },
+      { path: ROUTE_PATTERNS.glossaryTerm, element: <TermDetailPage /> },
     ],
   },
   // 하단 바 없는 화면
@@ -62,8 +65,6 @@ export const router = createBrowserRouter([
       { path: ROUTES.compoundInterest, element: <CompoundInterestPage /> },
       { path: ROUTES.rateSimulator, element: <RateSimulatorPage /> },
       { path: ROUTE_PATTERNS.aiTutor, element: <AiTutorPage /> },
-      { path: ROUTES.glossary, element: <GlossaryPage /> },
-      { path: ROUTE_PATTERNS.glossaryTerm, element: <TermDetailPage /> },
       { path: ROUTES.characterShop, element: <CharacterShopPage /> },
     ],
   },

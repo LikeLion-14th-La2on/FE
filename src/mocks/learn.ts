@@ -12,6 +12,8 @@ export type Term = {
   id: string
   name: string
   sector: Sector
+  /** 미리보기 카드 위 기호 */
+  icon: string
   meaning: string
   example: string
   related: string[]
@@ -46,6 +48,7 @@ export const TERMS: Record<string, Term> = {
     id: 'dividend',
     name: '배당',
     sector: 'stock',
+    icon: '₩',
     meaning: '회사가 번 이익의 일부를 주주에게 나눠 주는 것',
     example: 'A회사 주식 10주를 가진 사람이 1주당 500원씩 배당을 받으면 5,000원을 받아요.',
     related: ['주주', '주식배당', '배당수익률'],
@@ -54,6 +57,7 @@ export const TERMS: Record<string, Term> = {
     id: 'shareholder',
     name: '주주',
     sector: 'stock',
+    icon: '₩',
     meaning: '회사의 주식을 가지고 있는 사람',
     example: '주식을 1주만 사도 그 회사의 주주가 돼요.',
     related: ['배당', '주주총회'],
@@ -62,6 +66,7 @@ export const TERMS: Record<string, Term> = {
     id: 'short-selling',
     name: '공매도',
     sector: 'stock',
+    icon: '↓',
     meaning: '없는 주식을 빌려 먼저 팔고, 나중에 사서 갚는 거래',
     example: '주가가 내릴 거라고 보고 1만 원에 빌려 판 뒤 8천 원에 사서 갚으면 2천 원이 남아요.',
     related: ['주가', '대차거래'],
@@ -70,6 +75,7 @@ export const TERMS: Record<string, Term> = {
     id: 'jeonse-ratio',
     name: '전세가율',
     sector: 'life',
+    icon: '%',
     meaning: '집값에서 전세보증금이 차지하는 비율',
     example: '집값이 3억 원이고 전세금이 2억 4천만 원이면 전세가율은 80%예요.',
     related: ['전세보증금', '깡통전세'],
@@ -78,6 +84,7 @@ export const TERMS: Record<string, Term> = {
     id: 'equal-payment',
     name: '원리금균등상환',
     sector: 'life',
+    icon: '₩',
     meaning: '원금과 이자를 합쳐 매달 같은 금액으로 갚는 방식',
     example: '1,200만 원을 1년 동안 빌리면 매달 비슷한 금액을 갚아요.',
     related: ['원금균등상환', '만기일시상환'],
@@ -86,6 +93,7 @@ export const TERMS: Record<string, Term> = {
     id: 'compound',
     name: '복리',
     sector: 'basic',
+    icon: '%',
     meaning: '원금뿐 아니라 붙은 이자에도 이자가 붙는 방식',
     example: '100만 원을 연 5% 복리로 2년 두면 110만 2,500원이 돼요.',
     related: ['단리', '이자'],
@@ -94,6 +102,7 @@ export const TERMS: Record<string, Term> = {
     id: 'simple-interest',
     name: '단리',
     sector: 'basic',
+    icon: '%',
     meaning: '처음 맡긴 원금에만 이자가 붙는 방식',
     example: '100만 원을 연 5% 단리로 2년 두면 110만 원이 돼요.',
     related: ['복리', '이자'],

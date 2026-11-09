@@ -99,7 +99,7 @@ export default function QuizPage() {
   return (
     <div className="flex flex-1 flex-col gap-gap">
       <QuizTopBar
-        value={index + 1}
+        value={retry ? queue.length : index + 1}
         max={queue.length}
         label={retry ? `다시 ${index + 1}/${queue.length}` : undefined}
         onClose={() => setExitOpen(true)}
@@ -148,6 +148,11 @@ export default function QuizPage() {
             submitted={submitted}
             onChange={(links) => setAnswer({ kind: 'matching', links })}
           />
+        )}
+        {retry && !submitted && (
+          <p className="mt-3 text-sub font-normal text-avocado-400">
+            이번에 틀려도 괜찮아요. 내일 카드뉴스로 한 번 더 보여드릴게요
+          </p>
         )}
       </div>
 
