@@ -1,0 +1,117 @@
+/*
+ * 디자인 토큰 (Figma 975 기준 수치 ÷ 2.5 = 390pt 기기 기준 px)
+ * 컴포넌트에서는 HEX를 직접 쓰지 말고 아래 토큰 클래스만 사용한다.
+ *   예) bg-coconut-200, text-herb, shadow-card, rounded-card, px-gutter, text-body
+ */
+
+@theme {
+  /* ───────── Color: Primary 팔레트 (Figma Primary) ─────────
+   * 기본값(bg-apricot, text-herb 등) = 500 단계
+   */
+  --color-coconut: var(--color-coconut-500);
+  --color-coconut-100: #fffefa;
+  --color-coconut-200: #fefdf4;
+  --color-coconut-300: #fefdef;
+  --color-coconut-400: #fdfce9;
+  --color-coconut-500: #fdfbe4;
+  --color-coconut-600: #cac9b6;
+  --color-coconut-700: #989789;
+  --color-coconut-800: #65645b;
+  --color-coconut-900: #33322e;
+
+  --color-apricot: var(--color-apricot-500);
+  --color-apricot-100: #f9eee1;
+  --color-apricot-200: #f3ddc3;
+  --color-apricot-300: #eccca6;
+  --color-apricot-400: #e6bb88;
+  --color-apricot-500: #e0aa6a;
+  --color-apricot-600: #b38855;
+  --color-apricot-700: #866640;
+  --color-apricot-800: #5a442a;
+  --color-apricot-900: #2d2215;
+
+  --color-avocado: var(--color-avocado-500);
+  --color-avocado-100: #e2e4d9;
+  --color-avocado-200: #c4c9b2;
+  --color-avocado-300: #a7ad8c;
+  --color-avocado-400: #899265;
+  --color-avocado-500: #6c773f;
+  --color-avocado-600: #565f32;
+  --color-avocado-700: #414726;
+  --color-avocado-800: #2b3019;
+  --color-avocado-900: #16180d;
+
+  --color-burnt-orange: var(--color-burnt-orange-500);
+  --color-burnt-orange-100: #f3e4d5;
+  --color-burnt-orange-200: #e7c8aa;
+  --color-burnt-orange-300: #dcad80;
+  --color-burnt-orange-400: #d09155;
+  --color-burnt-orange-500: #c4762b;
+  --color-burnt-orange-600: #9d5e22;
+  --color-burnt-orange-700: #76471a;
+  --color-burnt-orange-800: #4e2f11;
+  --color-burnt-orange-900: #271809;
+
+  --color-herb: var(--color-herb-500);
+  --color-herb-100: #d5d8d1;
+  --color-herb-200: #abb2a3;
+  --color-herb-300: #828b75;
+  --color-herb-400: #586547;
+  --color-herb-500: #2e3e19;
+  --color-herb-600: #253214;
+  --color-herb-700: #1c250f;
+  --color-herb-800: #12190a;
+  --color-herb-900: #090c05;
+
+  /* ───────── Font: Noto Sans KR ───────── */
+  --font-sans: 'Noto Sans KR', system-ui, -apple-system, sans-serif;
+
+  /* text-question / text-title / text-card-title / text-body / text-sub / text-tag */
+  --text-question: 22px;
+  --text-question--font-weight: 700;
+  --text-question--line-height: 1.4;
+
+  --text-title: 20px;
+  --text-title--font-weight: 900;
+  --text-title--line-height: 1.4;
+
+  --text-card-title: 15px;
+  --text-card-title--font-weight: 700;
+  --text-card-title--line-height: 1.4;
+
+  --text-body: 14px;
+  --text-body--font-weight: 400;
+  --text-body--line-height: 1.5;
+
+  --text-sub: 12px;
+  --text-sub--font-weight: 500;
+  --text-sub--line-height: 1.5;
+
+  --text-tag: 11px;
+  --text-tag--font-weight: 700;
+  --text-tag--line-height: 1.4;
+
+  /* ───────── Spacing / Size ───────── */
+  --spacing-gutter: 20px; /* 좌우 여백 50 */
+  --spacing-gap: 14px; /* 요소 간격 35 */
+  --spacing-btn: 52px; /* 버튼 높이 130 → h-btn */
+  --spacing-nav: 76px; /* 하단 바 높이 190 → h-nav */
+  --spacing-nav-inset: 16px; /* 하단 바 화면 아래·좌우 띄움 40 */
+  --spacing-nav-active: 56px; /* 활성 탭 원 140 → size-nav-active */
+  --spacing-nav-icon: 22px; /* 탭 아이콘 */
+  --container-app: 390px; /* 기기 폭 → max-w-app */
+
+  /* ───────── Radius ───────── */
+  --radius-screen: 28px; /* 화면 70 */
+  --radius-card: 20px; /* 카드 50 */
+  --radius-option: 18px; /* 보기 45 */
+  /* 칩: rounded-full */
+
+  /* ───────── Shadow ───────── */
+  --shadow-card: 0 4px 12px var(--color-coconut-600); /* y10 blur30 */
+  --shadow-btn-primary: 0 4px 0 var(--color-apricot-700); /* y10 blur0 */
+  --shadow-btn-secondary: 0 4px 0 var(--color-apricot-300);
+  --shadow-option: 0 3.2px 0 var(--color-coconut-600); /* y8 */
+  --shadow-nav: 0 8px 24px rgb(46 38 20 / 0.12);
+  --shadow-nav-active: 0 3.2px 0 var(--color-apricot-700), 0 6.4px 14.4px rgb(179 135 84 / 0.35);
+}
