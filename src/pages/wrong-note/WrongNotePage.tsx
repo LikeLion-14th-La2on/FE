@@ -49,7 +49,11 @@ export default function WrongNotePage() {
           ‹
         </button>
         <span className="text-card-title">
-          {week.label} · {week.items.length}문제
+          {week.label} ·{' '}
+          {filter === 'all'
+            ? `전체 ${week.items.length}`
+            : `${SECTORS[filter].label} ${items.length}`}
+          문제
         </span>
         <button
           type="button"

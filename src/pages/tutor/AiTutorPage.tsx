@@ -142,6 +142,7 @@ export default function AiTutorPage() {
             </li>
           ),
         )}
+        {loading && <li className="text-sub font-normal text-avocado-400">보통 몇 초면 끝나요</li>}
       </ol>
 
       {pending !== null && (
@@ -193,7 +194,7 @@ export default function AiTutorPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={loading}
-            placeholder={loading ? '답변이 끝날 때까지 기다려 주세요' : '궁금한 걸 물어보세요'}
+            placeholder={loading ? '답변이 끝날 때까지 입력 잠김' : '궁금한 걸 물어보세요'}
             className="min-w-0 flex-1 bg-transparent text-body outline-none placeholder:text-avocado-300"
           />
           <button

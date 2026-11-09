@@ -1,6 +1,6 @@
 /**
  * 매칭 답: 왼쪽 용어를 누른 뒤 오른쪽 뜻을 누르면 연결된다.
- * - 연결된 쌍은 같은 번호 배지로 표시, 이미 연결된 용어를 다시 누르면 연결이 풀린다.
+ * - 연결된 쌍은 초록 테두리 + ✓ (Figma), 이미 연결된 용어를 다시 누르면 연결이 풀린다.
  * - 4쌍을 모두 연결해야 정답 확인을 누를 수 있다.
  */
 import clsx from 'clsx'
@@ -18,7 +18,7 @@ type Props = {
 }
 
 const cell =
-  'flex min-h-14 w-full items-center gap-2 rounded-option border-2 px-3 py-2.5 text-left text-body font-medium'
+  'flex min-h-[46px] w-full items-center gap-1.5 rounded-option border-2 px-3.5 py-2.5 text-left text-[13px] leading-snug font-medium'
 
 export default function MatchingAnswer({ question, links, submitted, onChange }: Props) {
   const [pickedTerm, setPickedTerm] = useState<number | null>(null)
@@ -50,6 +50,7 @@ export default function MatchingAnswer({ question, links, submitted, onChange }:
     setPickedTerm(null)
   }
 
+  const linkedClass = 'border-avocado-500 bg-avocado-100 text-avocado-400'
   const resultClass = (ok: boolean) =>
     ok ? 'border-avocado-500 bg-avocado-100' : 'border-burnt-orange-500 bg-burnt-orange-100'
 
@@ -72,13 +73,13 @@ export default function MatchingAnswer({ question, links, submitted, onChange }:
                     submitted
                       ? resultClass(ok)
                       : pickedTerm === t
-                        ? 'border-apricot-500 bg-apricot-100 font-bold'
+                        ? 'border-apricot-500 bg-apricot-100 text-apricot-800'
                         : linked
-                          ? 'border-transparent bg-avocado-100'
+                          ? linkedClass
                           : 'border-transparent bg-coconut-100 shadow-option',
                   )}
                 >
-                  {linked && <Badge n={t + 1} />}
+                  {linked && !submitted && <span aria-hidden>✓</span>}
                   {p.term}
                 </button>
               </li>
@@ -97,17 +98,16 @@ export default function MatchingAnswer({ question, links, submitted, onChange }:
                   onClick={() => pressMeaning(m)}
                   className={clsx(
                     cell,
-                    'text-sub',
                     submitted
                       ? resultClass(ok)
                       : owner !== null
-                        ? 'border-transparent bg-avocado-100'
+                        ? linkedClass
                         : pickedTerm !== null
                           ? 'border-apricot-300 bg-coconut-100 shadow-option'
                           : 'border-transparent bg-coconut-100 shadow-option',
                   )}
                 >
-                  {owner !== null && <Badge n={owner + 1} />}
+                  {owner !== null && !submitted && <span aria-hidden>✓</span>}
                   {meaning}
                 </button>
               </li>
@@ -122,13 +122,5 @@ export default function MatchingAnswer({ question, links, submitted, onChange }:
         </p>
       )}
     </div>
-  )
-}
-
-function Badge({ n }: { n: number }) {
-  return (
-    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-avocado-500 text-tag text-coconut-100">
-      {n}
-    </span>
   )
 }

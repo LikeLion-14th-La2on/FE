@@ -15,12 +15,12 @@ export default function QuizTopBar({ value, max, label, onClose }: Props) {
         type="button"
         aria-label="학습 그만두기"
         onClick={onClose}
-        className="-ml-1 flex size-9 items-center justify-center rounded-full text-xl text-coconut-800"
+        className="-ml-1 flex size-9 items-center justify-center rounded-full text-xl text-avocado-400"
       >
         ✕
       </button>
       <ProgressBar value={value} max={max} className="flex-1" />
-      <span className="min-w-10 text-right text-sub text-coconut-800">
+      <span className="min-w-10 text-right text-sub font-bold text-avocado-400">
         {label ?? `${value}/${max}`}
       </span>
     </div>

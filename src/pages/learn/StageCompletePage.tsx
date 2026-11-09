@@ -26,17 +26,37 @@ export default function StageCompletePage() {
   const hasNext = stage < STAGE_COUNT
 
   const stats = [
-    { label: '정답률', value: `${rate}%`, className: 'bg-coconut-100 shadow-card' },
-    { label: '도토리', value: `🌰 +${STAGE_ACORN}`, className: 'bg-apricot-100' },
-    { label: '연속 학습', value: `🔥 ${STREAK_DAYS}일 연속`, className: 'bg-burnt-orange-100' },
-    { label: '새 용어', value: `${result.newTerms}개`, className: 'bg-coconut-100 shadow-card' },
+    {
+      label: '정답률',
+      value: `${rate}%`,
+      box: 'bg-coconut-100 shadow-card',
+      text: 'text-avocado-600',
+    },
+    {
+      label: '도토리',
+      value: `🌰 +${STAGE_ACORN}`,
+      box: 'bg-apricot-100',
+      text: 'text-burnt-orange-600',
+    },
+    {
+      label: '연속 학습',
+      value: `🔥 ${STREAK_DAYS}일 연속`,
+      box: 'bg-apricot-100',
+      text: 'text-apricot-700',
+    },
+    {
+      label: '새 용어',
+      value: `${result.newTerms}개`,
+      box: 'bg-coconut-100 shadow-card',
+      text: 'text-herb-500',
+    },
   ]
 
   return (
     <div className="flex flex-1 flex-col gap-gap pt-8">
       <div className="flex flex-col items-center gap-3 text-center">
         <Character size={140} />
-        <h1 className="text-title">
+        <h1 className="text-[26px] leading-tight font-black">
           {SECTORS[sector].label} {stage}단계 완수!
         </h1>
         {result.stillWrong > 0 && (
@@ -50,10 +70,10 @@ export default function StageCompletePage() {
         {stats.map((s) => (
           <div
             key={s.label}
-            className={clsx('flex flex-col gap-1 rounded-card px-4 py-4', s.className)}
+            className={clsx('flex flex-col items-center gap-1 rounded-option px-4 py-4', s.box)}
           >
-            <dt className="text-sub text-avocado-400">{s.label}</dt>
-            <dd className="text-[18px] leading-tight font-black">{s.value}</dd>
+            <dt className={clsx('text-sub font-bold', s.text)}>{s.label}</dt>
+            <dd className="text-[22px] leading-tight font-black">{s.value}</dd>
           </div>
         ))}
       </dl>

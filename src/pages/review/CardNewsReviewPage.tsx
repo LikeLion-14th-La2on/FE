@@ -7,7 +7,7 @@ import clsx from 'clsx'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
-import { Button, PageHeader, SectorChip } from '@/components/common'
+import { Button, PageHeader } from '@/components/common'
 import { TODAY } from '@/mocks/learn'
 import { YESTERDAY_REVIEW } from '@/mocks/review'
 import { ROUTES } from '@/router/routes'
@@ -50,16 +50,17 @@ export default function CardNewsReviewPage() {
     <div className="flex flex-1 flex-col gap-gap">
       <PageHeader title="어제 복습" />
 
-      <div className="flex items-center justify-between">
-        <h1 className="text-card-title">어제 다시 틀린 문제를 카드로 한 번 더 봐요</h1>
-        <span className="shrink-0 text-sub text-avocado-400">
+      <h1 className="text-title">
+        어제 다시 틀린 문제를
+        <br />
+        카드로 한 번 더 봐요
+      </h1>
+
+      <article className="flex flex-col gap-4 rounded-card border border-apricot-300 bg-apricot-100 px-6 py-6">
+        <span className="self-start rounded-full bg-coconut-100 px-3 py-1 text-sub font-bold">
           카드 {index + 1} / {cards.length}
         </span>
-      </div>
-
-      <article className="flex flex-col gap-4 rounded-card bg-apricot-100 px-6 py-6 shadow-card">
-        <SectorChip sector={card.sector} className="self-start" />
-        <h2 className="text-[26px] leading-tight font-black">{card.title}</h2>
+        <h2 className="text-[28px] leading-tight font-black">{card.title}</h2>
 
         {step === 'read' ? (
           <>
