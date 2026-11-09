@@ -2,6 +2,8 @@ import { createBrowserRouter } from 'react-router'
 
 import AppLayout from '@/components/layout/AppLayout'
 import PlainLayout from '@/components/layout/PlainLayout'
+import GlossaryPage from '@/pages/glossary/GlossaryPage'
+import TermDetailPage from '@/pages/glossary/TermDetailPage'
 import HomePage from '@/pages/home/HomePage'
 import QuizPage from '@/pages/learn/QuizPage'
 import SectorStagePage from '@/pages/learn/SectorStagePage'
@@ -60,6 +62,8 @@ export const router = createBrowserRouter([
       { path: ROUTES.compoundInterest, element: <CompoundInterestPage /> },
       { path: ROUTES.rateSimulator, element: <RateSimulatorPage /> },
       { path: ROUTE_PATTERNS.aiTutor, element: <AiTutorPage /> },
+      { path: ROUTES.glossary, element: <GlossaryPage /> },
+      { path: ROUTE_PATTERNS.glossaryTerm, element: <TermDetailPage /> },
       { path: ROUTES.characterShop, element: <CharacterShopPage /> },
     ],
   },
