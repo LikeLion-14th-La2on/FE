@@ -25,6 +25,8 @@ export const ROUTES = {
   compoundInterest: '/tools/compound-interest',
   rateSimulator: '/tools/rate-simulator',
   aiTutor: (termId: string) => `/tutor/${termId}`,
+  glossary: '/glossary',
+  glossaryTerm: (termId: string) => `/glossary/${termId}`,
   my: '/my',
   characterShop: '/my/shop',
 } as const
@@ -35,4 +37,5 @@ export const ROUTE_PATTERNS = {
   quiz: '/learn/:sector/:stage/quiz',
   stageComplete: '/learn/:sector/:stage/complete',
   aiTutor: '/tutor/:termId',
+  glossaryTerm: '/glossary/:termId',
 } as const
