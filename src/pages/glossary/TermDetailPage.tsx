@@ -1,8 +1,10 @@
 /** 용어 상세: 쉬운 설명 · 예시 · 관련 용어 · 출처 */
+import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import { Button, PageHeader, SectorChip } from '@/components/common'
 import { toggleBookmark, useBookmarks } from '@/hooks/useBookmarks'
+import { addRecentTerm } from '@/hooks/useRecentTerms'
 import { SOURCE, TODAY, getTerm } from '@/mocks/learn'
 import { ROUTES } from '@/router/routes'
 
@@ -10,6 +12,10 @@ export default function TermDetailPage() {
   const navigate = useNavigate()
   const term = getTerm(useParams().termId)
   const saved = useBookmarks()
+
+  useEffect(() => {
+    if (term) addRecentTerm(term.id)
+  }, [term])
 
   if (!term) {
     return (
@@ -32,7 +38,9 @@ export default function TermDetailPage() {
           type="button"
           aria-pressed={on}
           onClick={() => toggleBookmark(term.id)}
-          className={on ? 'text-sub font-bold text-apricot-700' : 'text-sub text-avocado-400'}
+          className={
+            on ? 'text-sub font-bold text-apricot-700' : 'text-sub font-bold text-avocado-400'
+          }
         >
           {on ? '★ 단어장에 저장됨' : '☆ 단어장에 저장'}
         </button>
@@ -54,7 +62,7 @@ export default function TermDetailPage() {
         <h2 className="text-card-title">같이 알아두면 좋은 용어</h2>
         <ul className="flex flex-wrap gap-2">
           {term.related.map((r) => (
-            <li key={r} className="rounded-full bg-avocado-200 px-3 py-1.5 text-tag">
+            <li key={r} className="rounded-full bg-avocado-100 px-3 py-1.5 text-tag">
               {r}
             </li>
           ))}
