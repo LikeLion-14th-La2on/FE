@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 
 import { loginWithKakao, nextRouteAfterLogin } from '@/api/auth'
-import { Button, Character } from '@/components/common'
+import squirrel from '@/assets/squirrel.webp'
+import { Button } from '@/components/common'
 import { ROUTES } from '@/router/routes'
 
 export default function KakaoCallbackPage() {
@@ -26,7 +27,7 @@ export default function KakaoCallbackPage() {
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-gap">
-      <Character size={120} />
+      <img src={squirrel} alt="다람쥐 캐릭터" className="w-[120px]" />
       {error ? (
         <>
           <p className="text-center text-body">{error}</p>
