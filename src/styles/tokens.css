@@ -63,6 +63,10 @@
   --color-herb-800: #12190a;
   --color-herb-900: #090c05;
 
+  /* ───────── Color: 카카오 로그인 버튼 (카카오 디자인 가이드 고정색) ───────── */
+  --color-kakao: #fee500;
+  --color-kakao-label: #191919;
+
   /* ───────── Font: Noto Sans KR ───────── */
   --font-sans: 'Noto Sans KR', system-ui, -apple-system, sans-serif;
 
@@ -111,6 +115,7 @@
   --shadow-card: 0 4px 12px var(--color-coconut-600); /* y10 blur30 */
   --shadow-btn-primary: 0 4px 0 var(--color-apricot-700); /* y10 blur0 */
   --shadow-btn-secondary: 0 4px 0 var(--color-apricot-300);
+  --shadow-btn-kakao: 0 4px 0 var(--color-apricot-900);
   --shadow-option: 0 3.2px 0 var(--color-coconut-600); /* y8 */
   --shadow-nav: 0 8px 24px rgb(46 38 20 / 0.12);
   --shadow-nav-active: 0 3.2px 0 var(--color-apricot-700), 0 6.4px 14.4px rgb(179 135 84 / 0.35);
