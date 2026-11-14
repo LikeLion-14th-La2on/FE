@@ -4,6 +4,7 @@ import type { Sector } from '@/constants/sectors'
 export const ROUTES = {
   // ① 온보딩 · 레벨 테스트
   login: '/login',
+  kakaoCallback: '/oauth/kakao', // 카카오 디벨로퍼스에 등록한 Redirect URI 경로와 같아야 한다
   terms: '/onboarding/terms',
   nickname: '/onboarding/nickname',
   levelTest: '/level-test',
