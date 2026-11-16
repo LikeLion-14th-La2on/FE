@@ -103,12 +103,11 @@ Figma는 화면 폭 975로 그려져 있고, 실제 기기는 390pt입니다. **
 
 ### 크기 · 모서리 · 그림자
 
-| 클래스                                                                | 값                                         |
-| --------------------------------------------------------------------- | ------------------------------------------ |
-| `px-gutter` / `gap-gap` / `h-btn`                                     | 좌우 여백 20 / 요소 간격 14 / 버튼 높이 52 |
-| `rounded-screen` / `rounded-card` / `rounded-option` / `rounded-full` | 화면 28 / 카드 20 / 보기 18 / 칩           |
-| `shadow-card` / `shadow-option`                                       | 카드 그림자 / 보기 입체                    |
-| `shadow-btn-primary` / `shadow-btn-secondary`                         | 주 버튼 입체 / 보조 버튼 입체              |
+| 클래스                                                                                | 값                                                          |
+| ------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `px-gutter` / `gap-gap` / `h-btn` / `w-btn-width`                                     | 좌우 여백 20 / 요소 간격 14 / 버튼 높이 52 / 주 버튼 폭 350 |
+| `rounded-screen` / `rounded-card` / `rounded-option` / `rounded-btn` / `rounded-full` | 화면 28 / 카드 20 / 보기 18 / 버튼 16 / 칩                  |
+| `shadow-card` / `shadow-option`                                                       | 카드 그림자 / 보기 입체                                     |
 
 ### 공통 컴포넌트
 
@@ -119,6 +118,25 @@ Figma는 화면 폭 975로 그려져 있고, 실제 기기는 390pt입니다. **
 | `OptionButton` | `<OptionButton state="default \| selected \| correct \| wrong" />`    |
 | `ProgressBar`  | `<ProgressBar value={n} max={18} />`                                  |
 | `SectorChip`   | `<SectorChip sector="stock \| life \| basic" />`                      |
+
+### 기본 버튼 (`Button`)
+
+색은 직접 지정하지 않고 `variant`, `sector`, `disabled`로만 바꿉니다.
+
+| 종류                         | 사용                                            | 배경               | 글자               | 그림자             |
+| ---------------------------- | ----------------------------------------------- | ------------------ | ------------------ | ------------------ |
+| 주 버튼                      | `<Button />`                                    | `apricot-600`      | `coconut-100`      | `apricot-800`      |
+| 보조 버튼 · 📈 주식 (기본값) | `<Button variant="secondary" />`                | `apricot-100`      | `apricot-700`      | `apricot-300`      |
+| 보조 버튼 · 🏠 생활 금융     | `<Button variant="secondary" sector="life" />`  | `avocado-100`      | `avocado-700`      | `avocado-300`      |
+| 보조 버튼 · 📘 금융 기초     | `<Button variant="secondary" sector="basic" />` | `burnt-orange-100` | `burnt-orange-700` | `burnt-orange-300` |
+| 비활성                       | `<Button disabled />`                           | `coconut-600`      | `coconut-100`      | `coconut-800`      |
+
+- **주 버튼은 하나로 통일합니다.** 어느 페이지든 `apricot-600`, 크기 350×52 (Figma 875×130 · `w-btn-width` `h-btn`)
+- **섹터별 색은 보조 버튼에** 적용합니다. 섹터가 없는 페이지에서는 `sector` 없이 씁니다 (apricot).
+- **모든 버튼 공통 그림자**: 바깥쪽 아래로 4px (Figma y10), 흐림 0, **버튼 색보다 200 진한 색** (600 → 800, 100 → 300)
+- 누르면 4px 내려가며 그림자가 사라집니다 (눌린 느낌).
+- 모양: 모서리 16 (`rounded-btn`, Figma rx 40). 알약형 버튼은 쓰지 않습니다. 글자 `text-card-title` (15 Bold). 그라데이션·테두리는 쓰지 않습니다.
+- 흰색 버튼은 쓰지 않습니다. 흰 카드·시트 위에서도 구별되도록 보조 버튼도 색 바탕을 씁니다.
 
 ---
 
@@ -177,5 +195,5 @@ feat/기능명
 ### PR / 머지
 
 - `develop`에 직접 푸시하지 않습니다.
-- 기능 브랜치에서 작업 후 PR을 올리고, 팀원들의 검토 후 머지합니다.
+- 기능 브랜치에서 작업 후 PR을 올리고, **서로의 리뷰를 받은 후 머지**합니다.
 - `develop → main`은 배포 시점에 병합합니다 (PR 없이).
