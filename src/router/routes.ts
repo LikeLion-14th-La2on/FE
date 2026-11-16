@@ -30,6 +30,7 @@ export const ROUTES = {
   glossaryTerm: (termId: string) => `/glossary/${termId}`,
   my: '/my',
   characterShop: '/my/shop',
+  acornHistory: '/my/acorns',
 } as const
 
 /** 라우터 등록용 패턴 (:param) */

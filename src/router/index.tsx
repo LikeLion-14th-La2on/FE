@@ -9,6 +9,7 @@ import QuizPage from '@/pages/learn/QuizPage'
 import SectorStagePage from '@/pages/learn/SectorStagePage'
 import StageCompletePage from '@/pages/learn/StageCompletePage'
 import TermPreviewPage from '@/pages/learn/TermPreviewPage'
+import AcornHistoryPage from '@/pages/my/AcornHistoryPage'
 import CharacterShopPage from '@/pages/my/CharacterShopPage'
 import KakaoCallbackPage from '@/pages/onboarding/KakaoCallbackPage'
 import MyPage from '@/pages/my/MyPage'
@@ -69,6 +70,7 @@ export const router = createBrowserRouter([
       { path: ROUTES.rateSimulator, element: <RateSimulatorPage /> },
       { path: ROUTE_PATTERNS.aiTutor, element: <AiTutorPage /> },
       { path: ROUTES.characterShop, element: <CharacterShopPage /> },
+      { path: ROUTES.acornHistory, element: <AcornHistoryPage /> },
     ],
   },
 ])
