@@ -10,6 +10,7 @@ import SectorStagePage from '@/pages/learn/SectorStagePage'
 import StageCompletePage from '@/pages/learn/StageCompletePage'
 import TermPreviewPage from '@/pages/learn/TermPreviewPage'
 import CharacterShopPage from '@/pages/my/CharacterShopPage'
+import KakaoCallbackPage from '@/pages/onboarding/KakaoCallbackPage'
 import MyPage from '@/pages/my/MyPage'
 import NewsPage from '@/pages/news/NewsPage'
 import LevelTestPage from '@/pages/onboarding/LevelTestPage'
@@ -28,6 +29,8 @@ import WrongNotePage from '@/pages/wrong-note/WrongNotePage'
 import { ROUTE_PATTERNS, ROUTES } from './routes'
 
 export const router = createBrowserRouter([
+  // 로그인은 화면 전체가 갈색 배경이라 레이아웃 없이 둔다
+  { path: ROUTES.login, element: <LoginPage /> },
   // 하단 바 있는 화면
   {
     element: <AppLayout />,
@@ -47,7 +50,7 @@ export const router = createBrowserRouter([
     element: <PlainLayout />,
     children: [
       // ① 온보딩 · 레벨 테스트
-      { path: ROUTES.login, element: <LoginPage /> },
+      { path: ROUTES.kakaoCallback, element: <KakaoCallbackPage /> },
       { path: ROUTES.terms, element: <TermsPage /> },
       { path: ROUTES.nickname, element: <NicknamePage /> },
       { path: ROUTES.levelTest, element: <LevelTestPage /> },
