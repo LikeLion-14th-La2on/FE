@@ -20,10 +20,13 @@ export type LoginResult = {
 
 /** 카카오 로그인 버튼을 누르면 이동할 주소 */
 export function kakaoAuthorizeUrl() {
+  const state = crypto.randomUUID()
+  sessionStorage.setItem('kakaoState', state)
   const params = new URLSearchParams({
     client_id: KAKAO_REST_API_KEY,
     redirect_uri: redirectUri(),
     response_type: 'code',
+    state,
   })
   return `https://kauth.kakao.com/oauth/authorize?${params}`
 }
