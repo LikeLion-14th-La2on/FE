@@ -36,38 +36,42 @@ export default function LevelTestResultPage() {
     <div className="flex flex-1 flex-col gap-gap">
       <PageHeader onBack={() => navigate(ROUTES.home, { replace: true })} />
 
-      <div className="flex flex-col items-center gap-4 pt-2">
-        <Character size={120} />
-        <h1 className="text-title">이 단계부터 시작해요!</h1>
+      <div className="flex justify-center">
+        <Character width={137} />
       </div>
+      <h1 className="text-center text-[22px] leading-[1.4] font-black text-herb">
+        이 단계부터 시작해요!
+      </h1>
 
-      <ul className="flex flex-col gap-3">
-        {(Object.keys(SECTORS) as Sector[]).map((sector) => {
-          const c = ROW_CLASS[sector]
-          return (
-            <li
-              key={sector}
-              className={clsx('flex items-center gap-3 rounded-card px-4 py-4', c.row)}
+      {(Object.keys(SECTORS) as Sector[]).map((sector) => {
+        const c = ROW_CLASS[sector]
+        return (
+          <div
+            key={sector}
+            className={clsx('flex items-center gap-3 rounded-[24px] px-[18px] py-4', c.row)}
+          >
+            <span
+              aria-hidden
+              className="flex h-[41px] w-[34px] items-center justify-center rounded-[9.6px] bg-coconut-100 text-[18px]"
             >
-              <span
-                className="flex size-10 items-center justify-center rounded-xl bg-coconut-100 text-xl"
-                aria-hidden
-              >
-                {SECTORS[sector].emoji}
-              </span>
-              <span className="flex-1 text-card-title">{SECTORS[sector].label}</span>
-              <span className={clsx('text-card-title', c.text)}>{stages[sector]}단계부터</span>
-            </li>
-          )
-        })}
-      </ul>
+              {SECTORS[sector].emoji}
+            </span>
+            <span className="flex-1 text-[17px] leading-[1.4] font-bold text-herb">
+              {SECTORS[sector].label}
+            </span>
+            <span className={clsx('text-[15px] leading-[1.4] font-bold', c.text)}>
+              {stages[sector]}단계부터
+            </span>
+          </div>
+        )
+      })}
 
       {answers && (
         <button
           type="button"
           aria-expanded={showAll}
           onClick={() => setShowAll((v) => !v)}
-          className="text-sub text-avocado-400"
+          className="text-[13px] leading-[1.4] font-medium text-avocado-400"
         >
           문제별 해설 {showAll ? '접기 ∧' : '한꺼번에 보기 >'}
         </button>
@@ -79,7 +83,7 @@ export default function LevelTestResultPage() {
             const mine = answers[q.id]
             const ok = mine === q.answer
             return (
-              <li key={q.id} className="rounded-option bg-coconut-100 px-4 py-3 shadow-option">
+              <li key={q.id} className="rounded-[24px] bg-coconut-100 px-4 py-3 shadow-card">
                 <p className="text-sub text-avocado-400">
                   {i + 1}. {SECTORS[q.sector].label} {q.stage}단계 ·{' '}
                   <span className={ok ? 'text-avocado-600' : 'text-burnt-orange-600'}>
