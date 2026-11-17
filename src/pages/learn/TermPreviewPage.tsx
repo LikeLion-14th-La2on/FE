@@ -7,7 +7,7 @@ import clsx from 'clsx'
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 
-import { Button, PageHeader } from '@/components/common'
+import { Button, PageHeader, PeekSquirrel } from '@/components/common'
 import { SECTORS } from '@/constants/sectors'
 import { useStageParams } from '@/hooks/useStageParams'
 import { getStageContent } from '@/mocks/learn'
@@ -26,6 +26,14 @@ export default function TermPreviewPage() {
 
   const go = (i: number) => setIndex(Math.min(Math.max(i, 0), terms.length - 1))
 
+  const swipeEnd = (x: number) => {
+    if (startX.current === null) return
+    const dx = x - startX.current
+    startX.current = null
+    if (dx <= -SWIPE) go(index + 1)
+    else if (dx >= SWIPE) go(index - 1)
+  }
+
   const arrow =
     'absolute top-1/2 flex h-10 w-5 -translate-y-1/2 items-center justify-center text-[20px] leading-none font-bold text-apricot-600'
 
@@ -33,9 +41,9 @@ export default function TermPreviewPage() {
     <div className="flex flex-1 flex-col gap-gap">
       <PageHeader title={`${SECTORS[sector].label} ${stage}단계`} />
 
-      <div className="flex items-center justify-between">
-        <h1 className="text-card-title">오늘 배울 용어</h1>
-        <span className="text-sub font-bold text-avocado-400">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-[17px] leading-[1.4] font-bold text-herb">오늘 배울 용어</h2>
+        <span className="text-[13px] leading-[1.4] font-bold text-avocado-400">
           {index + 1} / {terms.length}
         </span>
       </div>
@@ -44,24 +52,19 @@ export default function TermPreviewPage() {
         aria-roledescription="카드"
         aria-label={`${index + 1}번째 용어`}
         onPointerDown={(e) => (startX.current = e.clientX)}
-        onPointerUp={(e) => {
-          if (startX.current === null) return
-          const dx = e.clientX - startX.current
-          startX.current = null
-          if (dx <= -SWIPE) go(index + 1)
-          else if (dx >= SWIPE) go(index - 1)
-        }}
+        onPointerUp={(e) => swipeEnd(e.clientX)}
         onPointerCancel={() => (startX.current = null)}
-        className="relative flex touch-pan-y flex-col gap-3 rounded-card bg-apricot-100 px-6 py-6 shadow-card select-none"
+        className="relative flex touch-pan-y flex-col gap-gap rounded-[24px] bg-apricot-100 p-6 select-none"
       >
-        <span aria-hidden className="text-[40px] leading-none font-black text-avocado-500">
+        <PeekSquirrel right={92} />
+        <span aria-hidden className="text-[40px] leading-[1.4] font-black text-avocado-500">
           {term.icon}
         </span>
-        <h2 className="mt-2 text-[30px] leading-tight font-black text-apricot-700">{term.name}</h2>
-        <p className="text-[17px] leading-normal font-medium">{term.meaning}</p>
-        <div className="mt-1 rounded-option bg-coconut-100 px-4 py-3 shadow-option">
-          <p className="text-sub font-bold text-burnt-orange-600">예시</p>
-          <p className="text-body">{term.example}</p>
+        <h3 className="text-[30px] leading-[1.4] font-black text-apricot-700">{term.name}</h3>
+        <p className="text-[17px] leading-[1.4] font-medium text-herb">{term.meaning}</p>
+        <div className="flex flex-col gap-1 rounded-[24px] bg-coconut-100 p-4 shadow-card">
+          <p className="text-[12px] leading-[1.4] font-bold text-burnt-orange-600">예시</p>
+          <p className="text-[14px] leading-[1.4] text-herb">{term.example}</p>
         </div>
 
         {index > 0 && (
