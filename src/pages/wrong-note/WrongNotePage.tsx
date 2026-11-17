@@ -67,7 +67,7 @@ export default function WrongNotePage() {
       </div>
 
       {week.items.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto" role="tablist" aria-label="섹터 필터">
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label="섹터 필터">
           {filters.map((f) => (
             <button
               key={f.key}
@@ -76,10 +76,8 @@ export default function WrongNotePage() {
               aria-selected={filter === f.key}
               onClick={() => setFilter(f.key)}
               className={clsx(
-                'shrink-0 rounded-full px-3 py-1.5 text-tag',
-                filter === f.key
-                  ? 'bg-apricot-600 text-coconut-100'
-                  : 'bg-coconut-100 text-herb shadow-option',
+                'rounded-full px-3 py-1.5 text-tag',
+                filter === f.key ? 'bg-apricot-600 text-coconut-100' : 'bg-coconut-100 text-herb',
               )}
             >
               {f.label}

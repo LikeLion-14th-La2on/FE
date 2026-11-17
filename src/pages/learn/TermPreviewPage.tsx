@@ -1,6 +1,6 @@
 /**
  * 용어 미리보기: 오늘 나올 용어를 카드로 먼저 본다 ("배우고 → 확인")
- * - 카드는 좌우로 밀거나 아래 점을 눌러 넘긴다.
+ * - 카드는 좌우로 밀거나(터치·마우스), 카드 양옆 ‹ › 또는 아래 점을 눌러 넘긴다.
  * - '문제 풀러 가기'는 언제든 누를 수 있다.
  */
 import clsx from 'clsx'
@@ -26,6 +26,9 @@ export default function TermPreviewPage() {
 
   const go = (i: number) => setIndex(Math.min(Math.max(i, 0), terms.length - 1))
 
+  const arrow =
+    'absolute top-1/2 flex h-10 w-5 -translate-y-1/2 items-center justify-center text-[20px] leading-none font-bold text-apricot-600'
+
   return (
     <div className="flex flex-1 flex-col gap-gap">
       <PageHeader title={`${SECTORS[sector].label} ${stage}단계`} />
@@ -48,7 +51,8 @@ export default function TermPreviewPage() {
           if (dx <= -SWIPE) go(index + 1)
           else if (dx >= SWIPE) go(index - 1)
         }}
-        className="flex touch-pan-y flex-col gap-3 rounded-card bg-apricot-100 px-6 py-6 shadow-card select-none"
+        onPointerCancel={() => (startX.current = null)}
+        className="relative flex touch-pan-y flex-col gap-3 rounded-card bg-apricot-100 px-6 py-6 shadow-card select-none"
       >
         <span aria-hidden className="text-[40px] leading-none font-black text-avocado-500">
           {term.icon}
@@ -59,6 +63,27 @@ export default function TermPreviewPage() {
           <p className="text-sub font-bold text-burnt-orange-600">예시</p>
           <p className="text-body">{term.example}</p>
         </div>
+
+        {index > 0 && (
+          <button
+            type="button"
+            aria-label="이전 용어"
+            onClick={() => go(index - 1)}
+            className={clsx(arrow, 'left-1')}
+          >
+            ‹
+          </button>
+        )}
+        {index < terms.length - 1 && (
+          <button
+            type="button"
+            aria-label="다음 용어"
+            onClick={() => go(index + 1)}
+            className={clsx(arrow, 'right-1')}
+          >
+            ›
+          </button>
+        )}
       </article>
 
       <div className="flex justify-center gap-1.5">
