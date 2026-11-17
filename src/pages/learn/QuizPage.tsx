@@ -5,6 +5,7 @@
  * 3. 다시 풀기 결과와 상관없이 단계 완수 → 다시 틀린 문제는 내일 카드뉴스로.
  * 풀다가 나가면 이 단계는 처음부터 (나가기 확인 시트).
  */
+import clsx from 'clsx'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 
@@ -26,6 +27,9 @@ import ChoiceAnswer from './quiz/ChoiceAnswer'
 import ExplanationPanel from './quiz/ExplanationPanel'
 import MatchingAnswer from './quiz/MatchingAnswer'
 import OxAnswer from './quiz/OxAnswer'
+
+/** 상황형 질문 문구는 FE에서 고정 (BE는 상황만 보낸다) */
+const SITUATION_PROMPT = '이럴 땐 어떻게 하는 게\n가장 좋을까요?'
 
 function wrongTitle(q: QuizQuestion): string {
   switch (q.type) {
@@ -105,23 +109,31 @@ export default function QuizPage() {
         onClose={() => setExitOpen(true)}
       />
 
-      <span
-        className={
-          retry
-            ? 'self-start rounded-full bg-apricot-100 px-2.5 py-1 text-tag text-apricot-700'
-            : 'self-start rounded-full bg-herb-100 px-2.5 py-1 text-tag text-herb'
-        }
-      >
-        {retry ? '틀린 문제 다시 풀기 · 1번만' : TYPE_LABEL[q.type]}
-      </span>
+      {!submitted && (
+        <span
+          className={clsx(
+            'self-start rounded-full px-3 py-[5px] text-[12px] leading-[1.4] font-bold',
+            retry ? 'bg-apricot-100 text-apricot-700' : 'bg-avocado-100 text-herb',
+          )}
+        >
+          {retry ? '틀린 문제 다시 풀기 · 1번만' : TYPE_LABEL[q.type]}
+        </span>
+      )}
 
       {q.type === 'situation' && (
-        <p className="rounded-[10px] border-l-4 border-apricot-500 bg-apricot-100 px-4 py-3 text-body text-apricot-800">
+        <p className="rounded-[24px] bg-apricot-100 px-4 py-[15px] text-[15px] leading-[1.4] text-apricot-800">
           {q.situation}
         </p>
       )}
 
-      <h1 className="text-question font-black whitespace-pre-line">{q.prompt}</h1>
+      <h1
+        className={clsx(
+          'leading-[1.4] font-black whitespace-pre-line',
+          submitted ? 'text-[18px] text-avocado-400' : 'text-[22px] text-herb',
+        )}
+      >
+        {q.type === 'situation' ? SITUATION_PROMPT : q.prompt}
+      </h1>
 
       <div key={`${retry}-${index}`}>
         {q.type === 'ox' && (
@@ -150,13 +162,13 @@ export default function QuizPage() {
           />
         )}
         {retry && !submitted && (
-          <p className="mt-3 text-sub font-normal text-avocado-400">
+          <p className="mt-gap text-[12px] leading-[1.4] text-avocado-400">
             이번에 틀려도 괜찮아요. 내일 카드뉴스로 한 번 더 보여드릴게요
           </p>
         )}
       </div>
 
-      <div className="mt-auto pt-2">
+      <div className={clsx('mt-auto', submitted && 'pt-16')}>
         {submitted ? (
           <ExplanationPanel
             correct={correct}
@@ -181,18 +193,23 @@ export default function QuizPage() {
         )}
       </div>
 
-      <BottomSheet open={exitOpen} onClose={() => setExitOpen(false)} labelledBy="quiz-exit-title">
-        <h2 id="quiz-exit-title" className="text-title">
+      <BottomSheet
+        open={exitOpen}
+        onClose={() => setExitOpen(false)}
+        labelledBy="quiz-exit-title"
+        peek
+      >
+        <h2 id="quiz-exit-title" className="text-[20px] leading-[1.4] font-black text-herb">
           학습을 그만둘까요?
         </h2>
-        <p className="text-body text-avocado-400">
+        <p className="text-[14px] leading-[1.5] text-herb">
           지금 나가면 이 단계는 처음부터 다시 풀어야 해요. 푼 문제는 저장되지 않아요.
         </p>
         <Button onClick={() => setExitOpen(false)}>계속 풀기</Button>
         <button
           type="button"
           onClick={() => navigate(ROUTES.home, { replace: true })}
-          className="h-btn text-card-title text-coconut-800"
+          className="h-btn text-[16px] leading-[1.4] font-bold text-avocado-400"
         >
           나가기
         </button>
