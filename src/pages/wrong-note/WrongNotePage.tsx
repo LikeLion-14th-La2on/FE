@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { BottomSheet, Button, Character, PageHeader, SectorChip } from '@/components/common'
+import { SECTOR_TEXT } from '@/constants/sectorText'
 import { SECTORS, type Sector } from '@/constants/sectors'
 import { SOURCE } from '@/mocks/learn'
 import { WRONG_NOTE_WEEKS, type WrongNoteItem } from '@/mocks/review'
@@ -38,17 +39,17 @@ export default function WrongNotePage() {
     <div className="flex flex-col gap-gap">
       <PageHeader title="오답노트" />
 
-      <div className="flex h-11 items-center justify-between rounded-full bg-herb-100 px-2">
+      <div className="flex h-[45px] items-center justify-between rounded-[22.6px] bg-avocado-100 px-4">
         <button
           type="button"
           aria-label="이전 주"
           disabled={!canPrev}
           onClick={() => setWeekIndex(weekIndex - 1)}
-          className="size-8 rounded-full text-lg disabled:text-coconut-600"
+          className="text-[18px] leading-[1.4] font-black text-herb disabled:text-coconut-600"
         >
           ‹
         </button>
-        <span className="text-card-title">
+        <span className="text-[15px] leading-[1.4] font-bold text-herb">
           {week.label} ·{' '}
           {filter === 'all'
             ? `전체 ${week.items.length}`
@@ -60,14 +61,14 @@ export default function WrongNotePage() {
           aria-label="다음 주"
           disabled={!canNext}
           onClick={() => setWeekIndex(weekIndex + 1)}
-          className="size-8 rounded-full text-lg disabled:text-coconut-600"
+          className="text-[18px] leading-[1.4] font-black text-herb disabled:text-coconut-600"
         >
           ›
         </button>
       </div>
 
       {week.items.length > 0 && (
-        <div className="flex flex-wrap gap-2" role="tablist" aria-label="섹터 필터">
+        <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="섹터 필터">
           {filters.map((f) => (
             <button
               key={f.key}
@@ -76,8 +77,8 @@ export default function WrongNotePage() {
               aria-selected={filter === f.key}
               onClick={() => setFilter(f.key)}
               className={clsx(
-                'rounded-full px-3 py-1.5 text-tag',
-                filter === f.key ? 'bg-apricot-600 text-coconut-100' : 'bg-coconut-100 text-herb',
+                'rounded-full px-3 py-1.5 text-[12px] leading-[1.4] font-bold',
+                filter === f.key ? 'bg-apricot-600 text-coconut-500' : 'bg-coconut-100 text-herb',
               )}
             >
               {f.label}
@@ -87,32 +88,41 @@ export default function WrongNotePage() {
       )}
 
       {week.items.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 py-12 text-center">
+        <div className="flex flex-col items-center gap-3 px-4 pt-12 pb-12 text-center">
           <Character width={96} />
-          <p className="text-card-title">이번 주에는 틀린 문제가 없어요</p>
+          <p className="text-[17px] leading-[1.4] font-bold text-herb">
+            이번 주에는 틀린 문제가 없어요
+          </p>
           {canPrev && (
-            <p className="text-sub text-avocado-400">‹ 를 눌러 지난주 오답을 볼 수 있어요</p>
+            <p className="text-[13px] leading-[1.4] text-avocado-400">
+              ‹ 를 눌러 지난주 오답을 볼 수 있어요
+            </p>
           )}
         </div>
       ) : items.length === 0 ? (
-        <p className="py-12 text-center text-body text-avocado-400">
+        <p className="py-12 text-center text-[14px] leading-[1.4] text-avocado-400">
           이 섹터는 이번 주 오답이 없어요
         </p>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col gap-gap">
           {items.map((it) => (
             <li
               key={it.id}
-              className="flex flex-col gap-2 rounded-card bg-coconut-100 px-4 py-4 shadow-card"
+              className="flex flex-col gap-1.5 rounded-[24px] bg-coconut-100 p-4 shadow-card"
             >
-              <SectorChip sector={it.sector} className="self-start" />
-              <p className="text-card-title">{it.question}</p>
-              <div className="flex items-center justify-between">
-                <span className="text-sub font-bold">정답 {it.correctAnswer}</span>
+              <SectorChip
+                sector={it.sector}
+                className={clsx('self-start px-3! py-[5px]!', SECTOR_TEXT[it.sector])}
+              />
+              <p className="text-[15px] leading-[1.4] font-bold text-herb">{it.question}</p>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[13px] leading-[1.4] font-bold text-herb-500">
+                  정답 {it.correctAnswer}
+                </span>
                 <button
                   type="button"
                   onClick={() => setOpen(it)}
-                  className="text-sub text-avocado-400"
+                  className="text-[13px] leading-[1.4] font-medium text-avocado-400"
                 >
                   해설 보기 ›
                 </button>
@@ -130,33 +140,42 @@ export default function WrongNotePage() {
         {open && (
           <>
             <div className="flex items-center gap-2">
-              <SectorChip sector={open.sector} />
-              <span className="text-tag font-medium text-avocado-400">
+              <SectorChip
+                sector={open.sector}
+                className={clsx('px-3! py-[5px]!', SECTOR_TEXT[open.sector])}
+              />
+              <span className="text-[12px] leading-[1.4] font-medium text-avocado-400">
                 {week.label} · {open.studiedAt}
               </span>
             </div>
-            <h2 id="wrong-sheet-title" className="text-title">
+            <h2 id="wrong-sheet-title" className="text-[20px] leading-[1.4] font-black text-herb">
               {open.question}
             </h2>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-option bg-burnt-orange-100 px-4 py-3">
-                <p className="text-tag font-medium text-burnt-orange-600">내 답</p>
-                <p className="text-[22px] font-black text-burnt-orange-700">{open.myAnswer}</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-[3px] rounded-[16px] bg-burnt-orange-100 px-3.5 py-2.5">
+                <p className="text-[12px] leading-[1.4] font-medium text-burnt-orange-700">내 답</p>
+                <p className="text-[22px] leading-[1.2] font-black text-burnt-orange-700">
+                  {open.myAnswer}
+                </p>
               </div>
-              <div className="rounded-option bg-avocado-100 px-4 py-3">
-                <p className="text-tag font-medium text-avocado-600">정답</p>
-                <p className="text-[22px] font-black text-avocado-700">{open.correctAnswer}</p>
+              <div className="flex flex-col gap-[3px] rounded-[16px] bg-avocado-100 px-3.5 py-2.5">
+                <p className="text-[12px] leading-[1.4] font-medium text-avocado-700">정답</p>
+                <p className="text-[22px] leading-[1.2] font-black text-avocado-700">
+                  {open.correctAnswer}
+                </p>
               </div>
             </div>
-            <p className="text-body">{open.explanation}</p>
-            <p className="text-tag font-medium text-avocado-400">출처 · {SOURCE}</p>
+            <p className="text-[14px] leading-[1.5] text-herb">{open.explanation}</p>
+            <p className="text-[11px] leading-[1.4] font-medium text-avocado-400">
+              출처 · {SOURCE}
+            </p>
             <Button variant="secondary" onClick={() => navigate(ROUTES.aiTutor(open.termId))}>
               AI 튜터에게 물어보기
             </Button>
             <button
               type="button"
               onClick={() => setOpen(null)}
-              className="h-btn text-card-title text-coconut-800"
+              className="h-btn text-[16px] leading-[1.4] font-bold text-avocado-400"
             >
               닫기
             </button>
