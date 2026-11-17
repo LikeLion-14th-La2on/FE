@@ -1,4 +1,7 @@
-/** OX 답: 큰 버튼 2개. 고르면 테두리, 제출 후엔 정답/오답 표시 */
+/**
+ * OX 답: 큰 버튼 2개. 제출 후엔 정답/오답 표시
+ * - 고른 버튼은 테두리 대신 눌린 채(아래로 내려가고 그림자 없음)로 남는다 (버튼 공통 스펙과 같은 눌림)
+ */
 import clsx from 'clsx'
 
 type Props = {
@@ -22,12 +25,12 @@ export default function OxAnswer({ value, answer, submitted, onSelect }: Props) 
             aria-pressed={picked}
             onClick={() => onSelect(v)}
             className={clsx(
-              'flex h-28 items-center justify-center rounded-card border-4 text-[44px] font-black text-coconut-100',
+              'flex h-28 items-center justify-center rounded-card text-[44px] font-black text-coconut-100',
               'transition-[transform,box-shadow,opacity] duration-75 enabled:active:translate-y-1 enabled:active:shadow-none',
               v === 'O'
                 ? 'bg-avocado-500 shadow-[0_5px_0_var(--color-avocado-700)]'
                 : 'bg-burnt-orange-500 shadow-[0_5px_0_var(--color-burnt-orange-700)]',
-              picked ? 'border-herb' : 'border-transparent',
+              picked && 'translate-y-1 shadow-none',
               dim && 'opacity-40',
             )}
           >
