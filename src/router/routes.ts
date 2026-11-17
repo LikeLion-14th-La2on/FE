@@ -7,6 +7,7 @@ export const ROUTES = {
   kakaoCallback: '/oauth/kakao', // 카카오 디벨로퍼스에 등록한 Redirect URI 경로와 같아야 한다
   terms: '/onboarding/terms',
   nickname: '/onboarding/nickname',
+  levelTestIntro: '/level-test/intro',
   levelTest: '/level-test',
   levelTestResult: '/level-test/result',
 
