@@ -14,6 +14,7 @@ import CharacterShopPage from '@/pages/my/CharacterShopPage'
 import KakaoCallbackPage from '@/pages/onboarding/KakaoCallbackPage'
 import MyPage from '@/pages/my/MyPage'
 import NewsPage from '@/pages/news/NewsPage'
+import LevelTestIntroPage from '@/pages/onboarding/LevelTestIntro'
 import LevelTestPage from '@/pages/onboarding/LevelTestPage'
 import LevelTestResultPage from '@/pages/onboarding/LevelTestResultPage'
 import LoginPage from '@/pages/onboarding/LoginPage'
@@ -54,6 +55,7 @@ export const router = createBrowserRouter([
       { path: ROUTES.kakaoCallback, element: <KakaoCallbackPage /> },
       { path: ROUTES.terms, element: <TermsPage /> },
       { path: ROUTES.nickname, element: <NicknamePage /> },
+      { path: ROUTES.levelTestIntro, element: <LevelTestIntroPage /> },
       { path: ROUTES.levelTest, element: <LevelTestPage /> },
       { path: ROUTES.levelTestResult, element: <LevelTestResultPage /> },
 

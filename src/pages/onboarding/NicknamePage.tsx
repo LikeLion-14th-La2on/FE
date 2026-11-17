@@ -1,4 +1,4 @@
-/** 닉네임 설정: 닉네임(최대 10자)을 입력하면 레벨 테스트로 이동 */
+/** 닉네임 설정: 닉네임(최대 10자)을 입력하면 레벨 테스트 안내로 이동 */
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
@@ -17,7 +17,8 @@ export default function NicknamePage() {
 
   const handleSubmit = () => {
     // TODO: 닉네임 저장 API 연결 후 이동
-    navigate(ROUTES.levelTest, { replace: true })
+    // 안내 화면에서 "○○ 님의"로 부르기 위해 닉네임을 같이 넘긴다
+    navigate(ROUTES.levelTestIntro, { replace: true, state: { nickname: trimmed } })
   }
 
   return (
