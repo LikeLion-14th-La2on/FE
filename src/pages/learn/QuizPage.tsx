@@ -4,9 +4,10 @@
  * 2. 틀린 문제는 5문제 뒤에 1번만 다시 낸다.
  * 3. 다시 풀기 결과와 상관없이 단계 완수 → 다시 틀린 문제는 내일 카드뉴스로.
  * 풀다가 나가면 이 단계는 처음부터 (나가기 확인 시트).
+ * 해설에서 AI 튜터로 갔다가 뒤로 오면 풀던 문제(해설 펼친 상태)로 돌아온다.
  */
 import clsx from 'clsx'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { BottomSheet, Button, QuizTopBar } from '@/components/common'
@@ -28,6 +29,28 @@ import ExplanationPanel from './quiz/ExplanationPanel'
 import MatchingAnswer from './quiz/MatchingAnswer'
 import OxAnswer from './quiz/OxAnswer'
 
+/** AI 튜터에 다녀오는 동안 풀이 상태를 잠깐 보관 (돌아오면 바로 지운다) */
+type Snapshot = {
+  queue: QuizQuestion[]
+  retry: boolean
+  index: number
+  answer: Answer | null
+  submitted: boolean
+  wrong: QuizQuestion[]
+  stillWrong: number
+}
+
+const snapshotKey = (sector: string, stage: number) => `quiz-snapshot:${sector}:${stage}`
+
+function readSnapshot(key: string): Snapshot | null {
+  try {
+    const raw = sessionStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as Snapshot) : null
+  } catch {
+    return null
+  }
+}
+
 /** 상황형 질문 문구는 FE에서 고정 (BE는 상황만 보낸다) */
 const SITUATION_PROMPT = '이럴 땐 어떻게 하는 게\n가장 좋을까요?'
 
@@ -48,13 +71,23 @@ export default function QuizPage() {
   const { sector, stage } = useStageParams()
   const { questions, terms } = useMemo(() => getStageContent(sector), [sector])
 
-  const [queue, setQueue] = useState<QuizQuestion[]>(questions)
-  const [retry, setRetry] = useState(false)
-  const [index, setIndex] = useState(0)
-  const [answer, setAnswer] = useState<Answer | null>(null)
-  const [submitted, setSubmitted] = useState(false)
-  const [wrong, setWrong] = useState<QuizQuestion[]>([])
-  const [stillWrong, setStillWrong] = useState(0)
+  const key = snapshotKey(sector, stage)
+  const [saved] = useState(() => readSnapshot(key))
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem(key)
+    } catch {
+      // 무시
+    }
+  }, [key])
+
+  const [queue, setQueue] = useState<QuizQuestion[]>(saved?.queue ?? questions)
+  const [retry, setRetry] = useState(saved?.retry ?? false)
+  const [index, setIndex] = useState(saved?.index ?? 0)
+  const [answer, setAnswer] = useState<Answer | null>(saved?.answer ?? null)
+  const [submitted, setSubmitted] = useState(saved?.submitted ?? false)
+  const [wrong, setWrong] = useState<QuizQuestion[]>(saved?.wrong ?? [])
+  const [stillWrong, setStillWrong] = useState(saved?.stillWrong ?? 0)
   const [exitOpen, setExitOpen] = useState(false)
 
   const q = queue[index]
@@ -66,6 +99,15 @@ export default function QuizPage() {
     if (!isCorrect(q, answer)) {
       if (retry) setStillWrong((n) => n + 1)
       else setWrong((list) => [...list, q])
+    }
+  }
+
+  const saveForTutor = () => {
+    const snapshot: Snapshot = { queue, retry, index, answer, submitted, wrong, stillWrong }
+    try {
+      sessionStorage.setItem(key, JSON.stringify(snapshot))
+    } catch {
+      // 저장이 안 되면 돌아왔을 때 처음부터 (기존 동작)
     }
   }
 
@@ -185,6 +227,7 @@ export default function QuizPage() {
             tutorLeft={TUTOR_FREE_PER_DAY}
             nextLabel={nextLabel}
             onNext={next}
+            onTutor={saveForTutor}
           />
         ) : (
           <Button disabled={!isComplete(q, answer)} onClick={submit}>
