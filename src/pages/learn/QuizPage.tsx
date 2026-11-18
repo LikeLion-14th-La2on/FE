@@ -3,14 +3,17 @@
  * 1. 5문제를 푼다. 답을 고르기 전엔 정답 확인 비활성, 제출하면 아래에 해설.
  * 2. 틀린 문제는 5문제 뒤에 1번만 다시 낸다.
  * 3. 다시 풀기 결과와 상관없이 단계 완수 → 다시 틀린 문제는 내일 카드뉴스로.
- * 풀다가 나가면 이 단계는 처음부터 (나가기 확인 시트).
+ * 풀다가 나가면 이 단계는 처음부터 (✕나 휴대폰 뒤로가기 → 나가기 확인 시트).
  * 해설에서 AI 튜터로 갔다가 뒤로 오면 풀던 문제(해설 펼친 상태)로 돌아온다.
+ * 정답 확인을 누르면 해설과 '다음 문제' 버튼이 보이도록 아래로 스크롤한다.
  */
 import clsx from 'clsx'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { BottomSheet, Button, QuizTopBar } from '@/components/common'
+import { useConfirmBack } from '@/hooks/useConfirmBack'
+import { saveReturnSnapshot, useReturnSnapshot } from '@/hooks/useReturnSnapshot'
 import { useStageParams } from '@/hooks/useStageParams'
 import { getStageContent, type QuizQuestion } from '@/mocks/learn'
 import { TUTOR_FREE_PER_DAY } from '@/mocks/tutor'
@@ -42,15 +45,6 @@ type Snapshot = {
 
 const snapshotKey = (sector: string, stage: number) => `quiz-snapshot:${sector}:${stage}`
 
-function readSnapshot(key: string): Snapshot | null {
-  try {
-    const raw = sessionStorage.getItem(key)
-    return raw ? (JSON.parse(raw) as Snapshot) : null
-  } catch {
-    return null
-  }
-}
-
 /** 상황형 질문 문구는 FE에서 고정 (BE는 상황만 보낸다) */
 const SITUATION_PROMPT = '이럴 땐 어떻게 하는 게\n가장 좋을까요?'
 
@@ -72,14 +66,7 @@ export default function QuizPage() {
   const { questions, terms } = useMemo(() => getStageContent(sector), [sector])
 
   const key = snapshotKey(sector, stage)
-  const [saved] = useState(() => readSnapshot(key))
-  useEffect(() => {
-    try {
-      sessionStorage.removeItem(key)
-    } catch {
-      // 무시
-    }
-  }, [key])
+  const saved = useReturnSnapshot<Snapshot>(key)
 
   const [queue, setQueue] = useState<QuizQuestion[]>(saved?.queue ?? questions)
   const [retry, setRetry] = useState(saved?.retry ?? false)
@@ -89,6 +76,16 @@ export default function QuizPage() {
   const [wrong, setWrong] = useState<QuizQuestion[]>(saved?.wrong ?? [])
   const [stillWrong, setStillWrong] = useState(saved?.stillWrong ?? 0)
   const [exitOpen, setExitOpen] = useState(false)
+  useConfirmBack(() => setExitOpen(true))
+
+  /** 정답 확인 직후 해설이 화면 밖에 있으면 '다음 문제' 버튼까지 보이게 내린다 */
+  const panelRef = useRef<HTMLDivElement>(null)
+  const [submitTick, setSubmitTick] = useState(0)
+  useEffect(() => {
+    if (submitTick === 0) return
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    panelRef.current?.scrollIntoView({ block: 'end', behavior: reduce ? 'auto' : 'smooth' })
+  }, [submitTick])
 
   const q = queue[index]
   const correct = submitted && isCorrect(q, answer)
@@ -96,20 +93,15 @@ export default function QuizPage() {
 
   const submit = () => {
     setSubmitted(true)
+    setSubmitTick((n) => n + 1)
     if (!isCorrect(q, answer)) {
       if (retry) setStillWrong((n) => n + 1)
       else setWrong((list) => [...list, q])
     }
   }
 
-  const saveForTutor = () => {
-    const snapshot: Snapshot = { queue, retry, index, answer, submitted, wrong, stillWrong }
-    try {
-      sessionStorage.setItem(key, JSON.stringify(snapshot))
-    } catch {
-      // 저장이 안 되면 돌아왔을 때 처음부터 (기존 동작)
-    }
-  }
+  const saveForTutor = () =>
+    saveReturnSnapshot<Snapshot>(key, { queue, retry, index, answer, submitted, wrong, stillWrong })
 
   const finish = (result: StageResult) =>
     navigate(ROUTES.stageComplete(sector, stage), { replace: true, state: result })
@@ -117,6 +109,7 @@ export default function QuizPage() {
   const next = () => {
     setAnswer(null)
     setSubmitted(false)
+    window.scrollTo(0, 0)
     if (!isLastInRound) {
       setIndex(index + 1)
       return
@@ -145,7 +138,7 @@ export default function QuizPage() {
   return (
     <div className="flex flex-1 flex-col gap-gap">
       <QuizTopBar
-        value={retry ? queue.length : index + 1}
+        value={index + 1}
         max={queue.length}
         label={retry ? `다시 ${index + 1}/${queue.length}` : undefined}
         onClose={() => setExitOpen(true)}
@@ -210,7 +203,7 @@ export default function QuizPage() {
         )}
       </div>
 
-      <div className={clsx('mt-auto', submitted && 'pt-16')}>
+      <div ref={panelRef} className={clsx('mt-auto', submitted && 'pt-16')}>
         {submitted ? (
           <ExplanationPanel
             correct={correct}
