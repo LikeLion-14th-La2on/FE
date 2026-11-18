@@ -4,6 +4,7 @@ import AppLayout from '@/components/layout/AppLayout'
 import PlainLayout from '@/components/layout/PlainLayout'
 import GlossaryPage from '@/pages/glossary/GlossaryPage'
 import TermDetailPage from '@/pages/glossary/TermDetailPage'
+import ForestPage from '@/pages/home/ForestPage'
 import HomePage from '@/pages/home/HomePage'
 import QuizPage from '@/pages/learn/QuizPage'
 import SectorStagePage from '@/pages/learn/SectorStagePage'
@@ -73,6 +74,7 @@ export const router = createBrowserRouter([
       { path: ROUTE_PATTERNS.aiTutor, element: <AiTutorPage /> },
       { path: ROUTES.characterShop, element: <CharacterShopPage /> },
       { path: ROUTES.acornHistory, element: <AcornHistoryPage /> },
+      { path: ROUTES.forest, element: <ForestPage /> },
     ],
   },
 ])

@@ -29,6 +29,7 @@ export const ROUTES = {
   aiTutor: (termId: string) => `/tutor/${termId}`,
   glossary: '/glossary',
   glossaryTerm: (termId: string) => `/glossary/${termId}`,
+  forest: '/forest',
   my: '/my',
   characterShop: '/my/shop',
   acornHistory: '/my/acorns',

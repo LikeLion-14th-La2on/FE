@@ -211,9 +211,9 @@ export default function HomePage() {
         {/* 다람쥐 캐릭터 자리 (이미지 준비되면 넣기, Figma 지름 72 · 중심 294,276) */}
         <div className="absolute top-[240px] left-[258px] size-[72px]" aria-hidden />
 
-        {/* TODO: 내 숲 화면 생기면 연결 */}
         <button
           type="button"
+          onClick={() => navigate(ROUTES.forest)}
           className="mx-auto mt-8 flex items-center gap-1 text-sub font-bold text-avocado-500"
         >
           <span aria-hidden>🌳</span>내 숲 {MOCK.forestCount}그루 ›
@@ -407,7 +407,6 @@ function TodaySectorCard({ sector, stage }: { sector: Sector; stage: number }) {
 
 /**
  * 일요일: 오늘의 섹터 없이 아무 섹터나 골라서 학습 (하루 학습으로 인정)
- * TODO: 일요일 디자인 나오면 맞추기 (지금은 오늘의 섹터 카드 모양만 빌려 씀)
  */
 function ReviewDayCard() {
   const navigate = useNavigate()
