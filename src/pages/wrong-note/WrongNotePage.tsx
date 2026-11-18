@@ -45,9 +45,9 @@ export default function WrongNotePage() {
           aria-label="이전 주"
           disabled={!canPrev}
           onClick={() => setWeekIndex(weekIndex - 1)}
-          className="text-[18px] leading-[1.4] font-black text-herb disabled:text-coconut-600"
+          className="flex h-full w-6 items-center justify-center text-herb disabled:text-coconut-600"
         >
-          ‹
+          <Chevron dir="left" />
         </button>
         <span className="text-[15px] leading-[1.4] font-bold text-herb">
           {week.label} ·{' '}
@@ -61,9 +61,9 @@ export default function WrongNotePage() {
           aria-label="다음 주"
           disabled={!canNext}
           onClick={() => setWeekIndex(weekIndex + 1)}
-          className="text-[18px] leading-[1.4] font-black text-herb disabled:text-coconut-600"
+          className="flex h-full w-6 items-center justify-center text-herb disabled:text-coconut-600"
         >
-          ›
+          <Chevron dir="right" />
         </button>
       </div>
 
@@ -77,7 +77,7 @@ export default function WrongNotePage() {
               aria-selected={filter === f.key}
               onClick={() => setFilter(f.key)}
               className={clsx(
-                'rounded-full px-3 py-1.5 text-[12px] leading-[1.4] font-bold',
+                'rounded-full px-3 py-1.5 text-[12px] leading-[1.4] font-bold shadow-option',
                 filter === f.key ? 'bg-apricot-600 text-coconut-500' : 'bg-coconut-100 text-herb',
               )}
             >
@@ -183,5 +183,20 @@ export default function WrongNotePage() {
         )}
       </BottomSheet>
     </div>
+  )
+}
+
+/** 주차 이동 화살표: 글자(‹ ›)는 글꼴마다 세로 위치가 달라서 SVG로 그려 막대 가운데에 맞춘다 */
+function Chevron({ dir }: { dir: 'left' | 'right' }) {
+  return (
+    <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
+      <path
+        d={dir === 'left' ? 'M6.5 1.5 1.5 6.5l5 5' : 'M1.5 1.5l5 5-5 5'}
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   )
 }
