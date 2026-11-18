@@ -2,6 +2,7 @@
  * 레벨 테스트: 섹터별 단계당 2문제(OX), 총 18문제
  * - '잘 모르겠어요'는 오답으로 처리 (찍어서 레벨이 높게 나오는 것 방지)
  * - 건너뛰기: 모든 섹터 1단계부터 시작
+ * - ✕나 휴대폰 뒤로가기 → 그만두기 확인 시트
  */
 import clsx from 'clsx'
 import { useState } from 'react'
@@ -16,6 +17,7 @@ import {
   type LevelAnswer,
 } from '@/mocks/levelTest'
 import { OX_CLASS } from '@/pages/learn/quiz/answer'
+import { useConfirmBack } from '@/hooks/useConfirmBack'
 import { ROUTES } from '@/router/routes'
 
 export default function LevelTestPage() {
@@ -23,6 +25,7 @@ export default function LevelTestPage() {
   const [index, setIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, LevelAnswer>>({})
   const [exitOpen, setExitOpen] = useState(false)
+  useConfirmBack(() => setExitOpen(true))
 
   const total = LEVEL_QUESTIONS.length
   const question = LEVEL_QUESTIONS[index]
