@@ -19,7 +19,6 @@ const MOCK = {
   acornTotal: 30,
   streakDays: 5,
   shieldCount: 0, // 가진 스트릭 보호권 수
-  shieldPrice: 20, // TODO: 보호권 가격 미정 (임시값)
   progress: {
     stock: { cleared: 2, total: 3 },
     life: { cleared: 1, total: 3 },
@@ -28,6 +27,10 @@ const MOCK = {
 }
 
 const NICKNAME_MAX_LENGTH = 10
+
+/** 스트릭 보호권: 도토리 5개에 1개, 최대 2개까지 가질 수 있다 */
+const SHIELD_PRICE = 5
+const SHIELD_MAX = 2
 
 type Sheet = 'nickname' | 'shield' | 'account' | null
 
@@ -246,13 +249,14 @@ function NicknameSheet({
 }
 
 /**
- * 스트릭 보호권: 도토리로 1개씩 산다
- * 연속 학습이 끊기면 (홈 조회 때 끊김 판정) 도토리 차감보다 보호권을 먼저 써서 연속 기록을 지킨다.
- * 며칠을 쉬어도 끊김 1번에 보호권 1개만 쓴다.
+ * 스트릭 보호권: 도토리로 1개씩 산다 (최대 2개)
+ * 서버가 홈 조회 때 끊김을 판정하면서, 빠진 날 수만큼 보호권이 있으면 자동으로 쓴다 (1개당 하루).
+ * 보호권이 빠진 날보다 적으면 쓰지 않고 남겨 두고, 연속 학습은 끊긴다.
  */
 function ShieldSheet({ onClose }: { onClose: () => void }) {
-  const { shieldCount, shieldPrice, acornTotal } = MOCK
-  const canBuy = acornTotal >= shieldPrice
+  const { shieldCount, acornTotal } = MOCK
+  const isFull = shieldCount >= SHIELD_MAX
+  const hasAcorns = acornTotal >= SHIELD_PRICE
 
   const handleBuy = () => {
     // TODO: 보호권 구매 API 연결 (성공하면 보유 수 · 도토리 갱신)
@@ -264,23 +268,30 @@ function ShieldSheet({ onClose }: { onClose: () => void }) {
       <h2 id="shield-sheet-title" className="text-title text-herb">
         🛡️ 스트릭 보호권
       </h2>
-      <p className="text-body text-herb-400">
-        연속 학습이 끊기는 날, 보호권 1개가 대신 연속 기록을 지켜줘요.
-        <br />
-        며칠을 쉬어도 끊김 1번에 보호권은 1개만 써요.
+      <p className="text-body break-keep text-herb-400">
+        학습을 쉰 날, 보호권 1개가 하루를 대신 지켜줘요. 따로 쓸 필요 없이 홈에 들어오면 쉰 날
+        수만큼 자동으로 써요.
+        <br />쉰 날보다 보호권이 적으면 쓰지 않고 남겨 두고, 연속 학습은 끊겨요.
       </p>
       <ul className="grid grid-cols-2 gap-2 text-center">
         <li className="rounded-2xl bg-avocado-100 py-3">
           <p className="text-sub text-herb-300">가진 보호권</p>
-          <p className="text-title text-herb">{shieldCount}개</p>
+          <p className="text-title text-herb">
+            {shieldCount}
+            <span className="text-body text-herb-300"> / {SHIELD_MAX}개</span>
+          </p>
         </li>
         <li className="rounded-2xl bg-apricot-100 py-3">
           <p className="text-sub text-apricot-600">내 도토리</p>
           <p className="text-title text-apricot-800">🌰 {acornTotal}</p>
         </li>
       </ul>
-      <Button className="mt-2 w-full" disabled={!canBuy} onClick={handleBuy}>
-        {canBuy ? `🌰 ${shieldPrice}개로 1개 사기` : `도토리가 부족해요 (🌰 ${shieldPrice}개 필요)`}
+      <Button className="mt-2 w-full" disabled={isFull || !hasAcorns} onClick={handleBuy}>
+        {isFull
+          ? `보호권은 최대 ${SHIELD_MAX}개까지 가질 수 있어요`
+          : hasAcorns
+            ? `🌰 ${SHIELD_PRICE}개로 1개 사기`
+            : `도토리가 부족해요 (🌰 ${SHIELD_PRICE}개 필요)`}
       </Button>
     </BottomSheet>
   )
