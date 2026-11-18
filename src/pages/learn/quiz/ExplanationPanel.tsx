@@ -19,6 +19,8 @@ type Props = {
   tutorLeft: number
   nextLabel: string
   onNext: () => void
+  /** AI 튜터로 넘어가기 직전 (돌아왔을 때 이어서 풀 수 있게 저장) */
+  onTutor?: () => void
 }
 
 export default function ExplanationPanel({
@@ -30,6 +32,7 @@ export default function ExplanationPanel({
   tutorLeft,
   nextLabel,
   onNext,
+  onTutor,
 }: Props) {
   return (
     <section
@@ -52,6 +55,7 @@ export default function ExplanationPanel({
       <p className="text-[11px] leading-[1.4] font-medium text-avocado-400">출처 · {SOURCE}</p>
       <Link
         to={ROUTES.aiTutor(termId)}
+        onClick={onTutor}
         className={clsx(
           'self-start bg-coconut-100 px-3 py-2 text-[13px] leading-[1.4] font-bold text-herb',
           correct ? 'rounded-[12px]' : 'rounded-[24px] shadow-card',
