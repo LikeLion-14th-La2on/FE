@@ -2,7 +2,7 @@
  * OX 답: 큰 버튼 2개 (Figma 423×240, 모서리 60, 글자 100 Black)
  * - 버튼 공통 스펙처럼 아래 그림자(버튼 색 +200)가 있고, 누르면 아래로 내려간다.
  * - 고른 버튼은 눌린 채로 남는다 (테두리 표시 없음).
- * - 제출 후: 정답 쪽에 ✓, 고르지 않은 오답 쪽은 흐리게.
+ * - 제출 후: 정답 버튼만 원래 색, 나머지는 흐리게 (✓ 표시 없음, 맞혔을 때와 틀렸을 때 모양 동일).
  */
 import clsx from 'clsx'
 
@@ -20,7 +20,7 @@ export default function OxAnswer({ value, answer, submitted = false, onSelect }:
     <div className="grid grid-cols-2 gap-3 pb-1">
       {(['O', 'X'] as const).map((v) => {
         const picked = value === v
-        const dim = submitted && v !== answer && !picked
+        const dim = submitted && v !== answer
         return (
           <button
             key={v}
@@ -37,7 +37,6 @@ export default function OxAnswer({ value, answer, submitted = false, onSelect }:
             )}
           >
             {v}
-            {submitted && v === answer && <span className="ml-2 text-[20px]">✓</span>}
           </button>
         )
       })}
