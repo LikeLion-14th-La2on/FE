@@ -2,6 +2,7 @@
  * 오답노트: 다시 풀지 않고 해설만 본다.
  * - 주차별(‹ ›) + 섹터 필터
  * - '해설 보기' → 바텀시트 (내 답·정답, 해설, 출처, AI 튜터)
+ * - 시트에서 AI 튜터로 갔다가 뒤로 오면 보던 주차·필터·해설 시트 그대로 돌아온다.
  */
 import clsx from 'clsx'
 import { useState } from 'react'
@@ -10,17 +11,25 @@ import { useNavigate } from 'react-router'
 import { BottomSheet, Button, Character, PageHeader, SectorChip } from '@/components/common'
 import { SECTOR_TEXT } from '@/constants/sectorText'
 import { SECTORS, type Sector } from '@/constants/sectors'
+import { saveReturnSnapshot, useReturnSnapshot } from '@/hooks/useReturnSnapshot'
 import { SOURCE } from '@/mocks/learn'
 import { WRONG_NOTE_WEEKS, type WrongNoteItem } from '@/mocks/review'
 import { ROUTES } from '@/router/routes'
 
 type Filter = 'all' | Sector
 
+/** AI 튜터에 다녀오는 동안 보관할 화면 상태 */
+type Snapshot = { weekIndex: number; filter: Filter; openId: string | null }
+const SNAPSHOT_KEY = 'wrong-note-snapshot'
+
 export default function WrongNotePage() {
   const navigate = useNavigate()
-  const [weekIndex, setWeekIndex] = useState(0)
-  const [filter, setFilter] = useState<Filter>('all')
-  const [open, setOpen] = useState<WrongNoteItem | null>(null)
+  const saved = useReturnSnapshot<Snapshot>(SNAPSHOT_KEY)
+  const [weekIndex, setWeekIndex] = useState(saved?.weekIndex ?? 0)
+  const [filter, setFilter] = useState<Filter>(saved?.filter ?? 'all')
+  const [open, setOpen] = useState<WrongNoteItem | null>(
+    () => WRONG_NOTE_WEEKS[weekIndex]?.items.find((it) => it.id === saved?.openId) ?? null,
+  )
 
   const week = WRONG_NOTE_WEEKS[weekIndex]
   const items = week.items.filter((it) => filter === 'all' || it.sector === filter)
@@ -169,7 +178,13 @@ export default function WrongNotePage() {
             <p className="text-[11px] leading-[1.4] font-medium text-avocado-400">
               출처 · {SOURCE}
             </p>
-            <Button variant="secondary" onClick={() => navigate(ROUTES.aiTutor(open.termId))}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                saveReturnSnapshot<Snapshot>(SNAPSHOT_KEY, { weekIndex, filter, openId: open.id })
+                navigate(ROUTES.aiTutor(open.termId))
+              }}
+            >
               AI 튜터에게 물어보기
             </Button>
             <button

@@ -2,9 +2,10 @@
  * AI 튜터: 용어 하나를 기준으로 쉬운 말로 답한다 (용어 DB 안에서만).
  * - 하루 무료 N회, 다 쓰면 도토리 M개로 질문할지 확인
  * - 답변 중엔 입력 잠금, 실패하면 '다시 시도' (무료 횟수 차감 안 함)
+ * - 새 메시지·답변·도토리 확인이 생기면 입력창까지 보이게 아래로 스크롤한다.
  */
 import clsx from 'clsx'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useParams } from 'react-router'
 
 import { Button, PageHeader, TutorAvatar } from '@/components/common'
@@ -38,6 +39,14 @@ export default function AiTutorPage() {
   const [pending, setPending] = useState<string | null>(null)
 
   const loading = messages.some((m) => m.role === 'tutor' && m.status === 'loading')
+
+  /** 대화가 화면보다 길어지면 새 내용이 화면 밖에 생기므로 맨 아래(입력창)로 따라간다 */
+  const bottomRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (messages.length === 0 && pending === null) return
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    bottomRef.current?.scrollIntoView({ block: 'end', behavior: reduce ? 'auto' : 'smooth' })
+  }, [messages, pending])
 
   if (!term) {
     return (
@@ -190,7 +199,7 @@ export default function AiTutorPage() {
         </section>
       )}
 
-      <div className="mt-auto flex flex-col gap-gap">
+      <div ref={bottomRef} className="mt-auto flex flex-col gap-gap">
         <span className="self-start rounded-full bg-apricot-100 px-3 py-[5px] text-[11px] leading-[1.4] font-bold text-apricot-700">
           {freeLeft <= 0
             ? '오늘 무료 질문을 모두 썼어요'

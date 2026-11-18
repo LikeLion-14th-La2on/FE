@@ -94,7 +94,7 @@ export default function CardNewsReviewPage() {
                     'transition-[transform,box-shadow,opacity] duration-75 enabled:active:translate-y-1 enabled:active:shadow-none',
                     OX_CLASS[v],
                     picked === v && 'translate-y-1 shadow-none',
-                    step === 'result' && v !== card.answer && picked !== v && 'opacity-40',
+                    step === 'result' && v !== card.answer && 'opacity-40',
                   )}
                 >
                   {v}

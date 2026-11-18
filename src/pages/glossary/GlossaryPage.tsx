@@ -1,4 +1,7 @@
-/** 용어사전: 검색 + 전체 용어 / 내 단어장(★) / 최근 본 용어 */
+/**
+ * 용어사전: 검색 + 전체 용어 / 내 단어장(★) / 최근 본 용어
+ * 용어 상세에 갔다가 뒤로 오면 검색어·탭·스크롤 위치 그대로 돌아온다.
+ */
 import clsx from 'clsx'
 import { useState } from 'react'
 import { Link } from 'react-router'
@@ -7,6 +10,7 @@ import { PageHeader, SectorChip } from '@/components/common'
 import { SECTOR_TEXT } from '@/constants/sectorText'
 import { toggleBookmark, useBookmarks } from '@/hooks/useBookmarks'
 import { useRecentTerms } from '@/hooks/useRecentTerms'
+import { saveReturnSnapshot, useReturnSnapshot } from '@/hooks/useReturnSnapshot'
 import { TERMS } from '@/mocks/learn'
 import { ROUTES } from '@/router/routes'
 
@@ -15,9 +19,15 @@ type Tab = 'all' | 'saved' | 'recent'
 /** 검색 결과가 없을 때 보여 줄 추천 용어 수 */
 const SUGGEST_COUNT = 3
 
+/** 용어 상세에 다녀오는 동안 보관할 화면 상태 */
+type Snapshot = { query: string; tab: Tab }
+const SNAPSHOT_KEY = 'glossary-snapshot'
+
 export default function GlossaryPage() {
-  const [query, setQuery] = useState('')
-  const [tab, setTab] = useState<Tab>('all')
+  const back = useReturnSnapshot<Snapshot>(SNAPSHOT_KEY)
+  const [query, setQuery] = useState(back?.query ?? '')
+  const [tab, setTab] = useState<Tab>(back?.tab ?? 'all')
+  const keepState = () => saveReturnSnapshot<Snapshot>(SNAPSHOT_KEY, { query, tab })
   const saved = useBookmarks()
   const recent = useRecentTerms()
 
@@ -91,6 +101,7 @@ export default function GlossaryPage() {
                   <li key={t.id}>
                     <Link
                       to={ROUTES.glossaryTerm(t.id)}
+                      onClick={keepState}
                       className="block rounded-full bg-avocado-100 px-3 py-1.5 text-[12px] leading-[1.4] font-bold text-herb"
                     >
                       {t.name}
@@ -108,6 +119,7 @@ export default function GlossaryPage() {
               <li key={t.id} className="relative rounded-[24px] bg-coconut-100 shadow-card">
                 <Link
                   to={ROUTES.glossaryTerm(t.id)}
+                  onClick={keepState}
                   className="flex flex-col gap-1.5 p-4 pr-[72px]"
                 >
                   <SectorChip
