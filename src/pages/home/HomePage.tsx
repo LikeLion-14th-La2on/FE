@@ -1,5 +1,5 @@
 /**
- * 홈: 인사 + 연속 학습·도토리 칩 / 오늘의 나무(도토리 n/7) / 오늘의 섹터 / 이번 주 연속 학습 / 오답 복습
+ * 홈: 인사 + 연속 학습·도토리·보호권 칩 / 오늘의 나무(도토리 n/7) / 오늘의 섹터 / 이번 주 연속 학습 / 오답 복습
  * Figma 975 → 390 (÷2.5)
  */
 import clsx from 'clsx'
@@ -19,19 +19,29 @@ import { Card } from '@/components/common'
 import { getSectorOfDay, SECTORS, type Sector } from '@/constants/sectors'
 import { ROUTES } from '@/router/routes'
 
-// TODO: 홈 API 연결 후 실제 값으로 교체
+/**
+ * TODO: 홈 API(GET /api/v1/home) 연결 후 실제 값으로 교체
+ * 연속 학습 끊김은 서버가 홈 조회 때 판정해서, 처리 후 값만 내려준다 (FE는 계산하지 않는다)
+ * - 빠진 날 수만큼 보호권이 있으면 자동으로 쓰고 연속 유지, 모자라면 쓰지 않고 연속 0 · 도토리 1개 떨어짐
+ */
 const MOCK = {
   nickname: 'OO',
-  streakDays: 5,
-  acornTotal: 30,
-  treeAcorns: 5, // 지금 키우는 나무에 모은 도토리 (7개가 되면 숲으로)
+  streak: {
+    currentCount: 5, // 처리 후 연속 학습일 (끊겼으면 0)
+    shieldCount: 1, // 처리 후 남은 보호권 수
+  },
+  acornBalance: 30, // 처리 후 도토리 잔액
+  tree: {
+    acornCount: 4, // 처리 후 나무에 붙어 있는 도토리 (7개가 되면 숲으로)
+    fallenCount: 1, // 지금 나무에서 떨어진 도토리 누적 수 (바닥에 놓인다)
+    acornFell: true, // 이번 홈 조회에서 실제로 떨어졌으면 true (같은 끊김으로는 한 번만)
+  },
   forestCount: 2,
   // 일요일(복습하는 날)에는 둘 다 null
   todaySector: getSectorOfDay(),
   nextStage: getSectorOfDay() ? 2 : null,
   week: [true, true, true, true, true, false, false], // 월~일 학습 여부
   wrongYesterday: 2,
-  lastStudyDate: new Date(), // 마지막으로 학습한 날 (오늘이면 떨어진 도토리 없음)
 }
 
 const ACORNS_PER_TREE = 7
@@ -128,21 +138,6 @@ const GROUND_SPOTS = [
   { left: 31, top: 83, rotate: -95 },
   { left: 68, top: 77, rotate: 20 },
 ]
-const FALL_SHOWN_KEY = 'dotori:fallen-acorns-shown'
-const DAY_MS = 86_400_000
-
-/** 날짜만 비교하려고 시각을 떼어낸 하루 번호 */
-const toDayNumber = (date: Date) =>
-  Math.floor((date.getTime() - date.getTimezoneOffset() * 60_000) / DAY_MS)
-
-/**
- * 빠진 날 수: 마지막 학습일 다음 날부터 어제까지 (오늘은 아직 학습할 수 있으니 빼고 센다)
- * 예) 마지막 학습 13일, 오늘 16일 → 14·15일 이틀
- */
-function getMissedDays(lastStudyDate: Date, today = new Date()) {
-  return Math.max(toDayNumber(today) - toDayNumber(lastStudyDate) - 1, 0)
-}
-
 /** 계절별 나무: 봄(3~5) 분홍 · 여름(6~8) 초록 · 가을(9~11) 주황 · 겨울(12~2) 흰색 */
 function getSeasonTree(month = new Date().getMonth() + 1) {
   if (month >= 3 && month <= 5) return treeSpring
@@ -162,25 +157,32 @@ const WEEK_DAYS = ['월', '화', '수', '목', '금', '토', '일']
 export default function HomePage() {
   const navigate = useNavigate()
   // 나무 하나에 최대 7개: 서버 값이 7을 넘거나 음수여도 0~7 사이로 맞춘다
-  const treeAcorns = Math.min(Math.max(MOCK.treeAcorns, 0), ACORNS_PER_TREE)
-  // 빠진 날 하루에 1개씩, 가장 최근에 붙은 도토리부터 떨어진다 (붙어 있는 것보다 많이 떨어질 순 없다)
-  const fallenCount = Math.min(getMissedDays(MOCK.lastStudyDate), treeAcorns)
-  const acornCount = treeAcorns - fallenCount
+  const acornCount = Math.min(Math.max(MOCK.tree.acornCount, 0), ACORNS_PER_TREE)
+  // 바닥 자리도 7곳이라 그 이상은 그리지 않는다
+  const fallenCount = Math.min(Math.max(MOCK.tree.fallenCount, 0), GROUND_SPOTS.length)
   const acornLayout = useMemo(() => getTreeAcornLayout(MOCK.forestCount + 1), [])
-  // 떨어진 도토리가 원래 붙어 있던 자리: 1번째는 마지막에 붙은 자리, 2번째는 그 앞 자리 …
-  const fallenFrom = acornLayout.slice(acornCount, treeAcorns).reverse()
+  // 이번에 떨어진 도토리는 남은 도토리 바로 다음 자리(가장 최근에 붙었던 자리)에서 떨어진다
+  const fellFrom =
+    MOCK.tree.acornFell && fallenCount > 0 && acornCount < ACORNS_PER_TREE
+      ? acornLayout[acornCount]
+      : null
 
   return (
     <div className="flex flex-col gap-gap">
       {/* 인사 + 칩 */}
       <header className="flex items-center justify-between">
-        <h1 className="text-title text-avocado-500">{MOCK.nickname}님, 반가워요</h1>
-        <div className="flex gap-[6px]">
+        <h1 className="min-w-0 truncate text-title text-avocado-500">
+          {MOCK.nickname}님, 반가워요
+        </h1>
+        <div className="flex shrink-0 gap-[6px]">
           <Chip className="bg-apricot-200 text-apricot-700" icon="🔥" label="연속 학습">
-            {MOCK.streakDays}
+            {MOCK.streak.currentCount}
           </Chip>
           <Chip className="bg-avocado-200 text-avocado-500" icon="🌰" label="도토리">
-            {MOCK.acornTotal}
+            {MOCK.acornBalance}
+          </Chip>
+          <Chip className="bg-herb-100 text-herb-400" icon="🛡️" label="보호권">
+            {MOCK.streak.shieldCount}
           </Chip>
         </div>
       </header>
@@ -205,7 +207,7 @@ export default function HomePage() {
               style={{ left: `${left}%`, top: `${top}%`, width: `${ACORN_SIZE}%` }}
             />
           ))}
-          <FallenAcorns fromSpots={fallenFrom} />
+          <FallenAcorns count={fallenCount} fellFrom={fellFrom} />
         </div>
 
         {/* 다람쥐 캐릭터 자리 (이미지 준비되면 넣기, Figma 지름 72 · 중심 294,276) */}
@@ -231,7 +233,7 @@ export default function HomePage() {
       <Card className="px-[18px] pt-5 pb-[18px] shadow-[0_4px_12px_rgb(0_0_0/0.05)]">
         <h2 className="flex items-center gap-1 text-[16px] font-bold text-herb">
           <span aria-hidden>🔥</span>
-          {MOCK.streakDays}일 연속 학습 중
+          {MOCK.streak.currentCount}일 연속 학습 중
         </h2>
         <ul className="mt-[14px] flex justify-between">
           {WEEK_DAYS.map((day, i) => (
@@ -292,53 +294,48 @@ function Chip({
 }
 
 /**
- * 연속 학습이 끊겨 떨어진 도토리: 빠진 날 하루에 1개씩 나무에서 떨어져 바닥에 쌓인다
- * - 나무에 붙어 있던 자리(fromSpots)에서 바닥으로 떨어져 통통 튄 뒤, 누운 채로 남는다
- * - 이미 떨어져 있던 도토리는 가만히 있고, 지난번에 본 뒤로 새로 떨어진 것만 애니메이션
- * - 다시 학습하면 마지막 학습일이 오늘이 되어 바닥이 비워진다
+ * 연속 학습이 끊겨 떨어진 도토리: 끊김 1번에 1개씩 나무에서 떨어져 바닥에 쌓인다 (tree.fallenCount)
+ * - 이번 홈 조회에서 떨어졌으면(tree.acornFell) 마지막 1개만 나무 자리(fellFrom)에서 떨어지는 애니메이션
+ *   서버가 같은 끊김으로는 한 번만 true를 주니, 홈을 다시 열어도 또 떨어지지 않는다
+ * - 나머지는 처음부터 바닥에 누워 있다
  * - 움직임 줄이기 설정이면 애니메이션 없이 바로 바닥에 놓인다
  */
-function FallenAcorns({ fromSpots }: { fromSpots: { left: number; top: number }[] }) {
-  const count = fromSpots.length
+function FallenAcorns({
+  count,
+  fellFrom,
+}: {
+  count: number
+  fellFrom: { left: number; top: number } | null
+}) {
   const fallen = GROUND_SPOTS.slice(0, count)
-  const refs = useRef<(HTMLImageElement | null)[]>([])
+  const lastRef = useRef<HTMLImageElement | null>(null)
 
   useEffect(() => {
-    // 지난번에 보여준 개수 이후로 새로 떨어진 것만 떨어뜨린다
-    let shown = 0
-    try {
-      shown = Number(localStorage.getItem(FALL_SHOWN_KEY)) || 0
-      localStorage.setItem(FALL_SHOWN_KEY, String(count))
-    } catch {
-      // 저장소를 못 쓰는 환경이면 전부 새로 떨어진 걸로 보여준다
-    }
-    if (count <= shown || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    if (!fellFrom || count === 0) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-    fallen.slice(shown).forEach((ground, n) => {
-      const i = shown + n
-      const from = fromSpots[i]
-      // translate %는 도토리 자기 크기 기준이라, 나무 기준 % 차이를 도토리 크기로 나눠 바꾼다
-      const dx = ((from.left - ground.left) / ACORN_SIZE) * 100
-      const dy = ((from.top - ground.top) / ACORN_SIZE) * 100
-      const landed = `translate(0, 0) rotate(${ground.rotate}deg)`
-      refs.current[i]?.animate(
-        [
-          // 중력처럼 점점 빨라지며 떨어지고 → 땅에 닿아 살짝 튀었다가 → 다시 내려앉는다
-          {
-            transform: `translate(${dx}%, ${dy}%) rotate(0deg)`,
-            easing: 'cubic-bezier(0.55, 0, 1, 0.45)',
-          },
-          { transform: landed, offset: 0.72, easing: 'ease-out' },
-          {
-            transform: `translate(0, -14%) rotate(${ground.rotate}deg)`,
-            offset: 0.86,
-            easing: 'ease-in',
-          },
-          { transform: landed },
-        ],
-        { duration: 900, delay: 400 + n * 200, fill: 'backwards' },
-      )
-    })
+    const ground = GROUND_SPOTS[count - 1]
+    // translate %는 도토리 자기 크기 기준이라, 나무 기준 % 차이를 도토리 크기로 나눠 바꾼다
+    const dx = ((fellFrom.left - ground.left) / ACORN_SIZE) * 100
+    const dy = ((fellFrom.top - ground.top) / ACORN_SIZE) * 100
+    const landed = `translate(0, 0) rotate(${ground.rotate}deg)`
+    lastRef.current?.animate(
+      [
+        // 중력처럼 점점 빨라지며 떨어지고 → 땅에 닿아 살짝 튀었다가 → 다시 내려앉는다
+        {
+          transform: `translate(${dx}%, ${dy}%) rotate(0deg)`,
+          easing: 'cubic-bezier(0.55, 0, 1, 0.45)',
+        },
+        { transform: landed, offset: 0.72, easing: 'ease-out' },
+        {
+          transform: `translate(0, -14%) rotate(${ground.rotate}deg)`,
+          offset: 0.86,
+          easing: 'ease-in',
+        },
+        { transform: landed },
+      ],
+      { duration: 900, delay: 400, fill: 'backwards' },
+    )
     // 처음 그릴 때 한 번만 실행
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -347,15 +344,11 @@ function FallenAcorns({ fromSpots }: { fromSpots: { left: number; top: number }[
 
   return (
     <>
-      <p className="sr-only">
-        {count}일 학습을 쉬어서 도토리 {count}개가 떨어졌어요
-      </p>
+      {fellFrom && <p className="sr-only">학습을 쉬어서 나무에서 도토리 1개가 떨어졌어요</p>}
       {fallen.map(({ left, top, rotate }, i) => (
         <img
           key={i}
-          ref={(el) => {
-            refs.current[i] = el
-          }}
+          ref={i === count - 1 ? lastRef : undefined}
           src={acorn0}
           alt=""
           className="absolute"
