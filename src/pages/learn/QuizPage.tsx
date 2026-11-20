@@ -21,6 +21,7 @@ import { ROUTES } from '@/router/routes'
 
 import {
   CIRCLED,
+  SITUATION_PROMPT,
   TYPE_LABEL,
   isComplete,
   isCorrect,
@@ -44,9 +45,6 @@ type Snapshot = {
 }
 
 const snapshotKey = (sector: string, stage: number) => `quiz-snapshot:${sector}:${stage}`
-
-/** 상황형 질문 문구는 FE에서 고정 (BE는 상황만 보낸다). 레벨 테스트와 같은 문구 */
-const SITUATION_PROMPT = '이 상황에 맞는\n개념은?'
 
 function wrongTitle(q: QuizQuestion): string {
   switch (q.type) {
