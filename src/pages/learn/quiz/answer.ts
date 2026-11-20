@@ -41,3 +41,9 @@ export const CIRCLED = ['①', '②', '③', '④']
 
 /** 단계 완수 화면으로 넘기는 결과 */
 export type StageResult = { correct: number; total: number; stillWrong: number; newTerms: number }
+
+/** OX 버튼 색 + 아래 그림자(버튼 색 +200) */
+export const OX_CLASS: Record<'O' | 'X', string> = {
+  O: 'bg-avocado-500 shadow-[0_4px_0_var(--color-avocado-700)]',
+  X: 'bg-burnt-orange-500 shadow-[0_4px_0_var(--color-burnt-orange-700)]',
+}
