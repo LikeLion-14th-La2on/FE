@@ -1,8 +1,12 @@
-/** 답 제출 후 해설: 정답(avocado) / 오답(burnt-orange) */
+/**
+ * 답 제출 후 해설 (Figma '답 제출 후 해설' / '해설 · 오답')
+ * avocado-100(정답) / burnt-orange-100(오답) 카드, 모서리 60, 패딩 50, 간격 25
+ * 카드 윗변에 손 올린 다람쥐
+ */
 import clsx from 'clsx'
 import { Link } from 'react-router'
 
-import { Button } from '@/components/common'
+import { Button, PeekSquirrel } from '@/components/common'
 import { SOURCE } from '@/mocks/learn'
 import { ROUTES } from '@/router/routes'
 
@@ -15,6 +19,8 @@ type Props = {
   tutorLeft: number
   nextLabel: string
   onNext: () => void
+  /** AI 튜터로 넘어가기 직전 (돌아왔을 때 이어서 풀 수 있게 저장) */
+  onTutor?: () => void
 }
 
 export default function ExplanationPanel({
@@ -26,33 +32,42 @@ export default function ExplanationPanel({
   tutorLeft,
   nextLabel,
   onNext,
+  onTutor,
 }: Props) {
   return (
     <section
       aria-live="polite"
       className={clsx(
-        'flex flex-col gap-2.5 rounded-card border px-5 py-5',
-        correct
-          ? 'border-avocado-200 bg-avocado-100'
-          : 'border-burnt-orange-200 bg-burnt-orange-100',
+        'relative flex flex-col gap-2.5 rounded-[24px] p-5',
+        correct ? 'bg-avocado-100' : 'bg-burnt-orange-100',
       )}
     >
-      <h2 className={clsx('text-title', correct ? 'text-herb' : 'text-burnt-orange-700')}>
+      <PeekSquirrel right={28} />
+      <h2
+        className={clsx(
+          'text-[20px] leading-[1.4] font-black',
+          correct ? 'text-herb' : 'text-burnt-orange-700',
+        )}
+      >
         {title}
       </h2>
-      <p className="text-body">{explanation}</p>
-      <p className="text-tag font-medium text-avocado-400">출처 · {SOURCE}</p>
-      {note && <p className="text-sub text-burnt-orange-600">{note}</p>}
+      <p className="text-[14px] leading-[1.4] text-herb">{explanation}</p>
+      <p className="text-[11px] leading-[1.4] font-medium text-avocado-400">출처 · {SOURCE}</p>
       <Link
         to={ROUTES.aiTutor(termId)}
-        className="self-start rounded-full bg-coconut-100 px-3.5 py-2 text-sub font-bold text-herb"
+        onClick={onTutor}
+        className={clsx(
+          'self-start bg-coconut-100 px-3 py-2 text-[13px] leading-[1.4] font-bold text-herb',
+          correct ? 'rounded-[12px]' : 'rounded-[24px] shadow-card',
+        )}
       >
         {correct ? 'AI 튜터에게 더 물어보기' : '왜 틀렸는지 AI 튜터에게 물어보기'} · 오늘{' '}
         {tutorLeft}회 남음
       </Link>
-      <Button className="mt-1" onClick={onNext}>
-        {nextLabel}
-      </Button>
+      {note && (
+        <p className="text-[12px] leading-[1.4] font-medium text-burnt-orange-600">{note}</p>
+      )}
+      <Button onClick={onNext}>{nextLabel}</Button>
     </section>
   )
 }
