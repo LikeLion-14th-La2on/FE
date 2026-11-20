@@ -39,5 +39,14 @@ export const TYPE_LABEL: Record<QuizQuestion['type'], string> = {
 
 export const CIRCLED = ['①', '②', '③', '④']
 
+/** 상황형 질문 문구는 FE에서 고정 (BE는 상황 설명만 보낸다). 문제 풀이·레벨 테스트 공통 */
+export const SITUATION_PROMPT = '이 상황에 맞는\n개념은?'
+
 /** 단계 완수 화면으로 넘기는 결과 */
 export type StageResult = { correct: number; total: number; stillWrong: number; newTerms: number }
+
+/** OX 버튼 색 + 아래 그림자(버튼 색 +200) */
+export const OX_CLASS: Record<'O' | 'X', string> = {
+  O: 'bg-avocado-500 shadow-[0_4px_0_var(--color-avocado-700)]',
+  X: 'bg-burnt-orange-500 shadow-[0_4px_0_var(--color-burnt-orange-700)]',
+}
