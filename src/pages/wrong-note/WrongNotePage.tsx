@@ -67,7 +67,7 @@ export default function WrongNotePage() {
       </div>
 
       {week.items.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto" role="tablist" aria-label="섹터 필터">
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label="섹터 필터">
           {filters.map((f) => (
             <button
               key={f.key}
@@ -76,10 +76,8 @@ export default function WrongNotePage() {
               aria-selected={filter === f.key}
               onClick={() => setFilter(f.key)}
               className={clsx(
-                'shrink-0 rounded-full px-3 py-1.5 text-tag',
-                filter === f.key
-                  ? 'bg-apricot-600 text-coconut-100'
-                  : 'bg-coconut-100 text-herb shadow-option',
+                'rounded-full px-3 py-1.5 text-tag',
+                filter === f.key ? 'bg-apricot-600 text-coconut-100' : 'bg-coconut-100 text-herb',
               )}
             >
               {f.label}
@@ -90,7 +88,7 @@ export default function WrongNotePage() {
 
       {week.items.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-12 text-center">
-          <Character size={110} />
+          <Character width={96} />
           <p className="text-card-title">이번 주에는 틀린 문제가 없어요</p>
           {canPrev && (
             <p className="text-sub text-avocado-400">‹ 를 눌러 지난주 오답을 볼 수 있어요</p>

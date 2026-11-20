@@ -1,7 +1,6 @@
 /** 4지선다·상황형 답 */
-import { OptionButton, type OptionState } from '@/components/common'
-
 import { CIRCLED } from './answer'
+import QuizOption, { type QuizOptionState } from './QuizOption'
 
 type Props = {
   options: string[]
@@ -12,7 +11,7 @@ type Props = {
 }
 
 export default function ChoiceAnswer({ options, value, answer, submitted, onSelect }: Props) {
-  const stateOf = (i: number): OptionState => {
+  const stateOf = (i: number): QuizOptionState => {
     if (!submitted) return value === i ? 'selected' : 'default'
     if (i === answer) return 'correct'
     if (i === value) return 'wrong'
@@ -20,17 +19,11 @@ export default function ChoiceAnswer({ options, value, answer, submitted, onSele
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-gap">
       {options.map((opt, i) => (
-        <OptionButton
-          key={opt}
-          state={stateOf(i)}
-          disabled={submitted}
-          onClick={() => onSelect(i)}
-          className={value === i || (submitted && i === answer) ? 'font-bold' : undefined}
-        >
-          {CIRCLED[i]}&nbsp;&nbsp;{opt}
-        </OptionButton>
+        <QuizOption key={opt} state={stateOf(i)} disabled={submitted} onClick={() => onSelect(i)}>
+          {`${CIRCLED[i]}  ${opt}`}
+        </QuizOption>
       ))}
     </div>
   )
