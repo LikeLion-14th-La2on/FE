@@ -1,33 +1,61 @@
 /**
- * 매칭 답: 왼쪽 용어를 누른 뒤 오른쪽 뜻을 누르면 연결된다.
- * - 연결된 쌍은 초록 테두리 + ✓ (Figma), 이미 연결된 용어를 다시 누르면 연결이 풀린다.
- * - 4쌍을 모두 연결해야 정답 확인을 누를 수 있다.
+ * 매칭 답 (Figma '문제 풀이 · 매칭' / '문제 풀이 · 매칭 · 정답 확인 후')
+ * - 왼쪽 용어를 누른 뒤 오른쪽 뜻을 누르면 짝이 된다. 선은 긋지 않는다.
+ * - 짝이 된 칸은 ✓ 없이 색으로만 표시 (avocado-100 + avocado-500 테두리).
+ * - 지금 고른 용어는 apricot-100 + apricot-500 테두리. 짝이 된 용어를 다시 누르면 풀린다.
+ * - 4쌍을 모두 짝지어야 정답 확인을 누를 수 있다.
+ * - 정답 확인 후: 칸 색은 그대로 두고, 맞힌 짝의 두 칸에만 ✓ 배지를 붙인다.
+ * 칸: 425×115 → 높이 46, 모서리 24, 테두리 2, 글자 13 Medium
  */
 import clsx from 'clsx'
 import { useState } from 'react'
 
-import type { MatchingQuestion } from '@/mocks/learn'
-
-import { MEANING_ORDER } from './answer'
-
 type Props = {
-  question: MatchingQuestion
+  terms: string[]
+  /** 화면에 보이는 순서의 뜻 */
+  meanings: string[]
   links: Record<number, number>
   submitted: boolean
+  /** 정답 확인 뒤 서버가 준 정답 짝 {"용어": "뜻"} */
+  correctPairs?: Record<string, string>
   onChange: (links: Record<number, number>) => void
 }
 
 const cell =
-  'flex min-h-[46px] w-full items-center gap-1.5 rounded-option border-2 px-3.5 py-2.5 text-left text-[13px] leading-snug font-medium'
+  'relative flex min-h-[46px] w-full items-center rounded-[24px] border-2 px-3.5 py-2 text-left text-[13px] leading-[1.4]'
+const idleClass = 'border-transparent bg-coconut-100 font-medium text-herb shadow-card'
+const linkedClass = 'border-avocado-500 bg-avocado-100 font-medium text-herb'
+const pickedClass = 'border-apricot-500 bg-apricot-100 font-bold text-apricot-800'
 
-export default function MatchingAnswer({ question, links, submitted, onChange }: Props) {
+/** 맞힌 짝 표시: 칸 오른쪽 위에 걸치는 54 원 (avocado-500, coconut-100 테두리 5) */
+function CorrectBadge() {
+  return (
+    <span
+      aria-label="정답"
+      className="absolute -top-[8.4px] -right-[6px] flex size-[21.6px] items-center justify-center rounded-full border-2 border-coconut-100 bg-avocado-500 text-[12px] leading-none font-black text-coconut-100"
+    >
+      ✓
+    </span>
+  )
+}
+
+export default function MatchingAnswer({
+  terms,
+  meanings,
+  links,
+  submitted,
+  correctPairs = {},
+  onChange,
+}: Props) {
   const [pickedTerm, setPickedTerm] = useState<number | null>(null)
-  const meanings = MEANING_ORDER.map((i) => question.pairs[i].meaning)
   const termOfMeaning = (m: number) => {
     const found = Object.entries(links).find(([, v]) => v === m)
     return found ? Number(found[0]) : null
   }
   const linkedCount = Object.keys(links).length
+  /** 용어 t의 짝이 정답인지 (정답 확인 뒤에만 의미 있음) */
+  const isRight = (t: number) => t in links && correctPairs[terms[t]] === meanings[links[t]]
+  const correctCount = terms.filter((_, t) => isRight(t)).length
 
   const pressTerm = (t: number) => {
     if (t in links) {
@@ -50,19 +78,15 @@ export default function MatchingAnswer({ question, links, submitted, onChange }:
     setPickedTerm(null)
   }
 
-  const linkedClass = 'border-avocado-500 bg-avocado-100 text-avocado-400'
-  const resultClass = (ok: boolean) =>
-    ok ? 'border-avocado-500 bg-avocado-100' : 'border-burnt-orange-500 bg-burnt-orange-100'
-
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-gap">
       <div className="grid grid-cols-2 gap-2.5">
-        <ul className="flex flex-col gap-2.5">
-          {question.pairs.map((p, t) => {
+        <ul className="flex flex-col gap-2">
+          {terms.map((term, t) => {
             const linked = t in links
-            const ok = linked && MEANING_ORDER[links[t]] === t
+            const ok = isRight(t)
             return (
-              <li key={p.term}>
+              <li key={term}>
                 <button
                   type="button"
                   disabled={submitted}
@@ -70,57 +94,41 @@ export default function MatchingAnswer({ question, links, submitted, onChange }:
                   onClick={() => pressTerm(t)}
                   className={clsx(
                     cell,
-                    submitted
-                      ? resultClass(ok)
-                      : pickedTerm === t
-                        ? 'border-apricot-500 bg-apricot-100 text-apricot-800'
-                        : linked
-                          ? linkedClass
-                          : 'border-transparent bg-coconut-100 shadow-option',
+                    pickedTerm === t && !submitted ? pickedClass : linked ? linkedClass : idleClass,
                   )}
                 >
-                  {linked && !submitted && <span aria-hidden>✓</span>}
-                  {p.term}
+                  {term}
+                  {submitted && ok && <CorrectBadge />}
                 </button>
               </li>
             )
           })}
         </ul>
-        <ul className="flex flex-col gap-2.5">
+        <ul className="flex flex-col gap-2">
           {meanings.map((meaning, m) => {
             const owner = termOfMeaning(m)
-            const ok = owner !== null && MEANING_ORDER[m] === owner
+            const ok = owner !== null && isRight(owner)
             return (
               <li key={meaning}>
                 <button
                   type="button"
                   disabled={submitted || pickedTerm === null}
                   onClick={() => pressMeaning(m)}
-                  className={clsx(
-                    cell,
-                    submitted
-                      ? resultClass(ok)
-                      : owner !== null
-                        ? linkedClass
-                        : pickedTerm !== null
-                          ? 'border-apricot-300 bg-coconut-100 shadow-option'
-                          : 'border-transparent bg-coconut-100 shadow-option',
-                  )}
+                  className={clsx(cell, owner !== null ? linkedClass : idleClass)}
                 >
-                  {owner !== null && !submitted && <span aria-hidden>✓</span>}
                   {meaning}
+                  {submitted && ok && <CorrectBadge />}
                 </button>
               </li>
             )
           })}
         </ul>
       </div>
-      {!submitted && (
-        <p className="text-sub text-avocado-400">
-          {question.pairs.length}쌍 중 {linkedCount}쌍 연결했어요
-          {pickedTerm !== null && ' · 이제 맞는 뜻을 눌러 주세요'}
-        </p>
-      )}
+      <p className="text-[12px] leading-[1.4] text-avocado-400">
+        {submitted
+          ? `${terms.length}쌍 중 ${correctCount}쌍 맞혔어요`
+          : `${terms.length}쌍 중 ${linkedCount}쌍 연결했어요`}
+      </p>
     </div>
   )
 }
