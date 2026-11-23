@@ -50,13 +50,12 @@ const TOOLS: Tool[] = [
   {
     to: ROUTES.rateSimulator,
     title: '금리 변동 시뮬레이터',
-    description: '*해당 도구는 아직 준비 중입니다',
+    description: '금리가 오르면 이자는 얼마나?',
     emoji: '📊',
     card: 'bg-herb-100',
     icon: 'bg-apricot-700 shadow-[0_3px_0_var(--color-burnt-orange-800)]',
     titleColor: 'text-herb',
     descriptionColor: 'text-avocado-500',
-    comingSoon: true,
   },
 ]
 

@@ -6,6 +6,7 @@
  * - 그래프: 해마다 불어나는 돈 (단리는 거의 직선, 복리는 갈수록 가팔라지는 곡선)
  * - 방식별 카드: 받는 돈(막대 길이 = 복리 대비) + 넣은 돈 대비 이자
  * - 방식 이름(ⓘ)을 누르면 뜻 바텀시트 → 확인 / AI 튜터에게 물어보기
+ * - 입력값 불러오기 · 자동 저장 (GET · PUT /tools/conditions, toolType COMPOUND)
  * (Figma 디자인 없음 — 대출 상환 비교 화면 스타일에 맞춤)
  */
 import clsx from 'clsx'
@@ -14,6 +15,7 @@ import { useNavigate } from 'react-router'
 
 import { BottomSheet, Button } from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
+import { useToolConditions } from '@/hooks/useToolConditions'
 import { ROUTES } from '@/router/routes'
 
 type Method = 'compound' | 'simple'
@@ -23,6 +25,10 @@ const PRINCIPAL = { min: 0, max: 100_000_000, step: 1_000_000 } // 0 ~ 1억
 const DEPOSIT = { min: 0, max: 3_000_000, step: 100_000 } // 매달 0 ~ 300만
 const RATE = { min: 1, max: 10, step: 0.1 } // 연 1% ~ 10% (직접 입력은 소수 둘째 자리까지)
 const YEARS = { min: 1, max: 30, step: 1 } // 1 ~ 30년
+
+/** 저장값이 범위 밖이면 슬라이더 끝으로 맞춘다 */
+const clamp = (value: number, { min, max }: { min: number; max: number }) =>
+  Math.min(Math.max(value, min), max)
 
 /** 방식별 이름 · 용어 id(AI 튜터 연결) · 뜻 · 그래프 색 */
 const METHOD_INFO: Record<
@@ -81,6 +87,12 @@ export default function CompoundInterestPage() {
   const [deposit, setDeposit] = useState(100_000)
   const [rate, setRate] = useState(5)
   const [years, setYears] = useState(10)
+  const touched = useToolConditions('COMPOUND', { principal, deposit, rate, years }, (saved) => {
+    setPrincipal(clamp(saved.principal, PRINCIPAL))
+    setDeposit(clamp(saved.deposit, DEPOSIT))
+    setRate(clamp(saved.rate, RATE))
+    setYears(clamp(saved.years, YEARS))
+  })
   const [openMethod, setOpenMethod] = useState<Method | null>(null)
 
   const input = { principal, deposit, rate }
@@ -129,7 +141,10 @@ export default function CompoundInterestPage() {
           value={principal}
           {...PRINCIPAL}
           unit={{ scale: 10_000, suffix: '만 원', decimals: 0 }}
-          onChange={setPrincipal}
+          onChange={(v) => {
+            touched()
+            setPrincipal(v)
+          }}
         />
         <Slider
           label="매달 넣는 돈"
@@ -137,7 +152,10 @@ export default function CompoundInterestPage() {
           value={deposit}
           {...DEPOSIT}
           unit={{ scale: 10_000, suffix: '만 원', decimals: 0 }}
-          onChange={setDeposit}
+          onChange={(v) => {
+            touched()
+            setDeposit(v)
+          }}
         />
         <Slider
           label="연 이율"
@@ -145,7 +163,10 @@ export default function CompoundInterestPage() {
           value={rate}
           {...RATE}
           unit={{ scale: 1, suffix: '%', decimals: 2 }}
-          onChange={setRate}
+          onChange={(v) => {
+            touched()
+            setRate(v)
+          }}
         />
         <Slider
           label="기간"
@@ -153,7 +174,10 @@ export default function CompoundInterestPage() {
           value={years}
           {...YEARS}
           unit={{ scale: 1, suffix: '년', decimals: 0 }}
-          onChange={setYears}
+          onChange={(v) => {
+            touched()
+            setYears(v)
+          }}
         />
       </section>
 

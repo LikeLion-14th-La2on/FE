@@ -3,6 +3,7 @@
  * - 결론 카드: 이자를 가장 적게 내는 방식 + 가장 많이 내는 방식과의 차이
  * - 방식별 카드: 총 이자(막대 길이 = 가장 많은 이자 대비) + 매달 내는 돈
  * - 방식 이름(ⓘ)을 누르면 뜻 바텀시트 → 확인 / AI 튜터에게 물어보기
+ * - 입력값 불러오기 · 자동 저장 (GET · PUT /tools/conditions, toolType LOAN)
  */
 import clsx from 'clsx'
 import { useState, type CSSProperties } from 'react'
@@ -10,6 +11,7 @@ import { useNavigate } from 'react-router'
 
 import { BottomSheet, Button } from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
+import { useToolConditions } from '@/hooks/useToolConditions'
 import { ROUTES } from '@/router/routes'
 
 type Method = 'equalPrincipal' | 'equalPayment' | 'bullet'
@@ -18,6 +20,10 @@ type Method = 'equalPrincipal' | 'equalPayment' | 'bullet'
 const AMOUNT = { min: 10_000_000, max: 500_000_000, step: 10_000_000 } // 1천만 ~ 5억
 const RATE = { min: 1, max: 10, step: 0.1 } // 연 1% ~ 10% (직접 입력은 소수 둘째 자리까지)
 const MONTHS = { min: 6, max: 360, step: 6 } // 6개월 ~ 30년
+
+/** 저장값이 범위 밖이면 슬라이더 끝으로 맞춘다 */
+const clamp = (value: number, { min, max }: { min: number; max: number }) =>
+  Math.min(Math.max(value, min), max)
 
 /** 방식별 이름 · 용어 id(AI 튜터 연결) · 뜻 */
 const METHOD_INFO: Record<Method, { name: string; termId: string; meaning: string }> = {
@@ -85,6 +91,11 @@ export default function LoanRepaymentPage() {
   const [rate, setRate] = useState(4.5)
   const [months, setMonths] = useState(24)
   const [openMethod, setOpenMethod] = useState<Method | null>(null)
+  const touched = useToolConditions('LOAN', { principal: amount, rate, months }, (saved) => {
+    setAmount(clamp(saved.principal, AMOUNT))
+    setRate(clamp(saved.rate, RATE))
+    setMonths(clamp(saved.months, MONTHS))
+  })
 
   const result = calculate(amount, rate, months)
 
@@ -132,7 +143,10 @@ export default function LoanRepaymentPage() {
           value={amount}
           {...AMOUNT}
           unit={{ scale: 10_000, suffix: '만 원', decimals: 0 }}
-          onChange={setAmount}
+          onChange={(v) => {
+            touched()
+            setAmount(v)
+          }}
         />
         <Slider
           label="연 금리"
@@ -140,7 +154,10 @@ export default function LoanRepaymentPage() {
           value={rate}
           {...RATE}
           unit={{ scale: 1, suffix: '%', decimals: 2 }}
-          onChange={setRate}
+          onChange={(v) => {
+            touched()
+            setRate(v)
+          }}
         />
         <Slider
           label="기간"
@@ -148,7 +165,10 @@ export default function LoanRepaymentPage() {
           value={months}
           {...MONTHS}
           unit={{ scale: 1, suffix: '개월', decimals: 0 }}
-          onChange={setMonths}
+          onChange={(v) => {
+            touched()
+            setMonths(v)
+          }}
         />
       </section>
 
