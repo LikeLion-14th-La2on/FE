@@ -1,7 +1,7 @@
 /**
  * 나무 수확: 도토리 7개가 다 열린 날(누적 학습일이 7의 배수가 된 날) 보여 주는 화면
  * - 위 카드: 다 자란 나무 + 꼭대기의 다람쥐 + 수확 보너스
- * - 아래 카드: 다음 계절 나무 (다람쥐는 맨 아래에서 다시 시작)
+ * - 아래 카드: 이어서 키울 나무 (같은 계절이면 같은 계절 나무, 다람쥐는 맨 아래에서 다시 시작)
  * Figma 975 → 390 (÷2.5)
  */
 import clsx from 'clsx'
@@ -16,8 +16,8 @@ import acornM30 from '@/assets/acorn/acorn-m30.svg'
 import { Card, Character } from '@/components/common'
 import {
   ACORNS_PER_TREE,
+  getSeason,
   getTreeProgress,
-  getTreeSeason,
   HARVEST_BONUS,
   toOrdinal,
 } from '@/constants/tree'
@@ -47,8 +47,8 @@ export default function HarvestPage() {
   // 오늘 7번째 도토리가 열려 일수가 7의 배수가 됐으니, 지금 나무 번호는 이미 다음 나무를 가리킨다
   const { treeIndex: nextIndex } = getTreeProgress(MOCK.totalStudyDays)
   const harvestedIndex = Math.max(nextIndex - 1, 0)
-  const harvested = getTreeSeason(harvestedIndex)
-  const next = getTreeSeason(nextIndex)
+  // 같은 계절 안에서는 같은 계절 나무: 수확한 나무도, 이어서 키울 나무도 지금 계절
+  const season = getSeason()
 
   return (
     <div className="flex flex-col gap-gap">
@@ -71,7 +71,7 @@ export default function HarvestPage() {
         </h2>
 
         <div className="relative mx-auto mt-4 w-[216px]">
-          <img src={harvested.image} alt={`${harvested.name} 나무`} className="w-full" />
+          <img src={season.image} alt={`${season.name} 나무`} className="w-full" />
           {ACORN_SPOTS.map(({ left, top, src }, i) => (
             <img
               key={i}
@@ -101,10 +101,10 @@ export default function HarvestPage() {
       {/* 다음 나무 */}
       <Card className="px-gutter pt-5 pb-6">
         <h2 className="text-center text-[17px] font-bold text-herb">
-          다음 나무는 {next.name} <span aria-hidden>{next.emoji}</span>
+          다음 나무도 {season.name} <span aria-hidden>{season.emoji}</span>
         </h2>
         <div className="relative mx-auto mt-3 w-[160px]">
-          <img src={next.image} alt={`${next.name} 나무`} className="w-full" />
+          <img src={season.image} alt={`${season.name} 나무`} className="w-full" />
           {/* 다람쥐: 줄기 맨 아래에서 다시 시작 */}
           <Character
             size={36}

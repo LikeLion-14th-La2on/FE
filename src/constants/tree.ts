@@ -1,7 +1,8 @@
 /**
  * 나무 규칙: 누적 학습일(user_streaks.total_study_days) 하나로 전부 계산한다
  * - 하루 학습(1단계 완수) → 도토리 1개, 다람쥐 한 칸 위로
- * - 7개가 다 열리면 수확(보너스 도토리) → 내 숲에 저장 → 다음 계절 나무 시작
+ * - 7개가 다 열리면 수확(보너스 도토리) → 내 숲에 저장 → 새 나무 시작
+ * - 나무 그림은 실제 계절(달)을 따른다: 같은 계절 동안 키운 나무는 모두 그 계절 나무
  * - 하루 빠뜨려도 나무는 그대로 (스트릭만 0)
  */
 import treeAutumn from '@/assets/tree/tree-autumn.svg'
@@ -13,17 +14,19 @@ export const ACORNS_PER_TREE = 7
 /** 수확 보너스 (도토리 내역 사유 TREE_HARVEST) */
 export const HARVEST_BONUS = 20
 
-/** 봄 → 여름 → 가을 → 겨울 반복 */
-export const SEASONS = [
-  { name: '봄', emoji: '🌸', image: treeSpring },
-  { name: '여름', emoji: '🌿', image: treeSummer },
-  { name: '가을', emoji: '🍂', image: treeAutumn },
-  { name: '겨울', emoji: '❄️', image: treeWinter },
-] as const
+export const SEASONS = {
+  spring: { name: '봄', emoji: '🌸', image: treeSpring },
+  summer: { name: '여름', emoji: '🌿', image: treeSummer },
+  autumn: { name: '가을', emoji: '🍂', image: treeAutumn },
+  winter: { name: '겨울', emoji: '❄️', image: treeWinter },
+} as const
 
-/** n번째 나무(0부터)의 계절 = 나무 번호 ÷ 4의 나머지 */
-export function getTreeSeason(treeIndex: number) {
-  return SEASONS[((treeIndex % SEASONS.length) + SEASONS.length) % SEASONS.length]
+/** 달 → 계절 나무: 봄(3~5) · 여름(6~8) · 가을(9~11) · 겨울(12~2), 기본값은 이번 달 */
+export function getSeason(month = new Date().getMonth() + 1) {
+  if (month >= 3 && month <= 5) return SEASONS.spring
+  if (month >= 6 && month <= 8) return SEASONS.summer
+  if (month >= 9 && month <= 11) return SEASONS.autumn
+  return SEASONS.winter
 }
 
 /**
@@ -34,7 +37,7 @@ export function getTreeSeason(treeIndex: number) {
 export function getTreeProgress(totalStudyDays: number) {
   const days = Math.max(Math.floor(totalStudyDays), 0)
   const treeIndex = Math.floor(days / ACORNS_PER_TREE)
-  return { treeIndex, acornCount: days % ACORNS_PER_TREE, season: getTreeSeason(treeIndex) }
+  return { treeIndex, acornCount: days % ACORNS_PER_TREE }
 }
 
 /** 오늘 학습으로 막 7개를 채웠는지 (= 수확 화면을 보여 줄 때): 일수가 7의 배수가 된 순간 */
