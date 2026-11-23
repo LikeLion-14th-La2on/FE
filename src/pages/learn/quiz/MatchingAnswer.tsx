@@ -10,14 +10,14 @@
 import clsx from 'clsx'
 import { useState } from 'react'
 
-import type { MatchingQuestion } from '@/mocks/learn'
-
-import { MEANING_ORDER } from './answer'
-
 type Props = {
-  question: MatchingQuestion
+  terms: string[]
+  /** 화면에 보이는 순서의 뜻 */
+  meanings: string[]
   links: Record<number, number>
   submitted: boolean
+  /** 정답 확인 뒤 서버가 준 정답 짝 {"용어": "뜻"} */
+  correctPairs?: Record<string, string>
   onChange: (links: Record<number, number>) => void
 }
 
@@ -39,17 +39,23 @@ function CorrectBadge() {
   )
 }
 
-export default function MatchingAnswer({ question, links, submitted, onChange }: Props) {
+export default function MatchingAnswer({
+  terms,
+  meanings,
+  links,
+  submitted,
+  correctPairs = {},
+  onChange,
+}: Props) {
   const [pickedTerm, setPickedTerm] = useState<number | null>(null)
-  const meanings = MEANING_ORDER.map((i) => question.pairs[i].meaning)
   const termOfMeaning = (m: number) => {
     const found = Object.entries(links).find(([, v]) => v === m)
     return found ? Number(found[0]) : null
   }
   const linkedCount = Object.keys(links).length
-  const correctCount = question.pairs.filter(
-    (_, t) => t in links && MEANING_ORDER[links[t]] === t,
-  ).length
+  /** 용어 t의 짝이 정답인지 (정답 확인 뒤에만 의미 있음) */
+  const isRight = (t: number) => t in links && correctPairs[terms[t]] === meanings[links[t]]
+  const correctCount = terms.filter((_, t) => isRight(t)).length
 
   const pressTerm = (t: number) => {
     if (t in links) {
@@ -76,11 +82,11 @@ export default function MatchingAnswer({ question, links, submitted, onChange }:
     <div className="flex flex-col gap-gap">
       <div className="grid grid-cols-2 gap-2.5">
         <ul className="flex flex-col gap-2">
-          {question.pairs.map((p, t) => {
+          {terms.map((term, t) => {
             const linked = t in links
-            const ok = linked && MEANING_ORDER[links[t]] === t
+            const ok = isRight(t)
             return (
-              <li key={p.term}>
+              <li key={term}>
                 <button
                   type="button"
                   disabled={submitted}
@@ -91,7 +97,7 @@ export default function MatchingAnswer({ question, links, submitted, onChange }:
                     pickedTerm === t && !submitted ? pickedClass : linked ? linkedClass : idleClass,
                   )}
                 >
-                  {p.term}
+                  {term}
                   {submitted && ok && <CorrectBadge />}
                 </button>
               </li>
@@ -101,7 +107,7 @@ export default function MatchingAnswer({ question, links, submitted, onChange }:
         <ul className="flex flex-col gap-2">
           {meanings.map((meaning, m) => {
             const owner = termOfMeaning(m)
-            const ok = owner !== null && MEANING_ORDER[m] === owner
+            const ok = owner !== null && isRight(owner)
             return (
               <li key={meaning}>
                 <button
@@ -120,8 +126,8 @@ export default function MatchingAnswer({ question, links, submitted, onChange }:
       </div>
       <p className="text-[12px] leading-[1.4] text-avocado-400">
         {submitted
-          ? `${question.pairs.length}쌍 중 ${correctCount}쌍 맞혔어요`
-          : `${question.pairs.length}쌍 중 ${linkedCount}쌍 연결했어요`}
+          ? `${terms.length}쌍 중 ${correctCount}쌍 맞혔어요`
+          : `${terms.length}쌍 중 ${linkedCount}쌍 연결했어요`}
       </p>
     </div>
   )
