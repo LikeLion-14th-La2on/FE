@@ -53,32 +53,33 @@ export default function StageCompletePage() {
   ]
 
   return (
-    <div className="flex flex-1 flex-col gap-gap pt-8">
-      <div className="flex flex-col items-center gap-3 text-center">
-        <Character size={140} />
-        <h1 className="text-[26px] leading-tight font-black">
-          {SECTORS[sector].label} {stage}단계 완수!
-        </h1>
-        {result.stillWrong > 0 && (
-          <p className="text-sub text-avocado-400">
-            틀린 문제 {result.stillWrong}개는 내일 카드뉴스로 다시 보여드려요
-          </p>
-        )}
+    <div className="flex flex-1 flex-col gap-gap">
+      <div aria-hidden className="h-[85px] shrink-0" />
+      <div className="flex justify-center">
+        <Character width={171} />
       </div>
+      <h1 className="text-center text-[26px] leading-[1.4] font-black text-herb">
+        {SECTORS[sector].label} {stage}단계 완수!
+      </h1>
+      {result.stillWrong > 0 && (
+        <p className="text-center text-[13px] leading-[1.4] text-avocado-400">
+          틀린 문제 {result.stillWrong}개는 내일 카드뉴스로 다시 보여드려요
+        </p>
+      )}
 
-      <dl className="grid grid-cols-2 gap-3">
+      <dl className="grid grid-cols-2 gap-2.5">
         {stats.map((s) => (
           <div
             key={s.label}
-            className={clsx('flex flex-col items-center gap-1 rounded-option px-4 py-4', s.box)}
+            className={clsx('flex flex-col items-center gap-1 rounded-[24px] p-4', s.box)}
           >
-            <dt className={clsx('text-sub font-bold', s.text)}>{s.label}</dt>
-            <dd className="text-[22px] leading-tight font-black">{s.value}</dd>
+            <dt className={clsx('text-[12px] leading-[1.4] font-bold', s.text)}>{s.label}</dt>
+            <dd className="text-[22px] leading-[1.4] font-black text-herb">{s.value}</dd>
           </div>
         ))}
       </dl>
 
-      <div className="mt-auto flex flex-col gap-3">
+      <div className="mt-auto flex flex-col gap-gap pt-[85px]">
         <Button
           onClick={() =>
             navigate(hasNext ? ROUTES.termPreview(sector, stage + 1) : ROUTES.learn, {

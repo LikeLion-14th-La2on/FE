@@ -88,7 +88,7 @@ export default function WrongNotePage() {
 
       {week.items.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-12 text-center">
-          <Character size={110} />
+          <Character width={96} />
           <p className="text-card-title">이번 주에는 틀린 문제가 없어요</p>
           {canPrev && (
             <p className="text-sub text-avocado-400">‹ 를 눌러 지난주 오답을 볼 수 있어요</p>

@@ -113,7 +113,7 @@ export default function AiTutorPage() {
             </li>
           ) : (
             <li key={m.id} className="flex items-start gap-2">
-              <Character size={36} className="text-[0px]" />
+              <Character width={36} className="text-[0px]" />
               <div
                 className={clsx(
                   'flex max-w-[80%] flex-col gap-2 rounded-[18px] rounded-tl-md px-4 py-2.5 text-body',
