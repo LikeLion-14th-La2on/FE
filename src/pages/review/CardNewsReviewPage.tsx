@@ -24,6 +24,7 @@ import {
   isComplete,
   matchingOf,
   toAnswerValue,
+  withIeyo,
   type Answer,
 } from '@/pages/learn/quiz/answer'
 import ChoiceAnswer from '@/pages/learn/quiz/ChoiceAnswer'
@@ -42,7 +43,7 @@ function resultText(q: SessionQuestion, g: Graded) {
     return `정답은 ${String(g.correctAnswer)}예요. 이 문제는 오답노트에 담아 둘게요.`
   if (q.type === 'MATCHING') return '짝이 틀린 곳이 있어요. 이 문제는 오답노트에 담아 둘게요.'
   const i = Number(g.correctAnswer)
-  return `정답은 ${CIRCLED[i]}번 ${choicesOf(q)[i] ?? ''}이에요. 이 문제는 오답노트에 담아 둘게요.`
+  return `정답은 ${CIRCLED[i]}번 ${withIeyo(choicesOf(q)[i] ?? '')}. 이 문제는 오답노트에 담아 둘게요.`
 }
 
 export default function CardNewsReviewPage() {
