@@ -1,9 +1,11 @@
 /** 레벨 테스트 안내: 닉네임 입력 직후, 레벨 테스트를 시작하기 전에 보여주는 화면 */
 import { useLocation, useNavigate } from 'react-router'
 
+import { getMe } from '@/api/user'
 import squirrelWelcome from '@/assets/squirrel.webp'
 import { Button } from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
+import { useApi } from '@/hooks/useApi'
 import { ROUTES } from '@/router/routes'
 
 const GUIDES = [
@@ -14,8 +16,10 @@ const GUIDES = [
 
 export default function LevelTestIntroPage() {
   const navigate = useNavigate()
-  // 닉네임 화면에서 navigate state로 넘겨받는다 (TODO: 사용자 정보 API 연결 후 그 값으로 교체)
-  const nickname = (useLocation().state as { nickname?: string } | null)?.nickname
+  // 닉네임 화면에서 넘겨받은 값을 먼저 쓰고, 없으면(새로고침 · 로그인 후 바로 온 경우) 내 정보에서 가져온다
+  const passed = (useLocation().state as { nickname?: string } | null)?.nickname
+  const me = useApi(getMe, 'me')
+  const nickname = passed ?? me.data?.nickname
 
   return (
     <>
