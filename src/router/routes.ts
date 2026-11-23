@@ -30,6 +30,7 @@ export const ROUTES = {
   glossary: '/glossary',
   glossaryTerm: (termId: string) => `/glossary/${termId}`,
   forest: '/forest',
+  harvest: '/forest/harvest',
   my: '/my',
   characterShop: '/my/shop',
   acornHistory: '/my/acorns',

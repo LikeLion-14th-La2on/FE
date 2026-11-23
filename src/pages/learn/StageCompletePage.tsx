@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router'
 
 import { Button, Character } from '@/components/common'
 import { SECTORS } from '@/constants/sectors'
+import { isHarvestDay } from '@/constants/tree'
 import { useStageParams } from '@/hooks/useStageParams'
 import { STAGE_COUNT } from '@/mocks/learn'
 import { ROUTES } from '@/router/routes'
@@ -12,6 +13,8 @@ import type { StageResult } from './quiz/answer'
 
 const STAGE_ACORN = 10 // 단계 최초 완수 보상 (목업)
 const STREAK_DAYS = 6 // 연속 학습일 (목업)
+// TODO: 단계 완수 응답의 누적 학습일(user_streaks.total_study_days)로 교체
+const TOTAL_STUDY_DAYS = 7
 
 export default function StageCompletePage() {
   const navigate = useNavigate()
@@ -24,6 +27,8 @@ export default function StageCompletePage() {
   }
   const rate = result.total ? Math.round((result.correct / result.total) * 100) : 0
   const hasNext = stage < STAGE_COUNT
+  // 오늘 학습으로 도토리 7개를 다 채웠으면 다음 단계 대신 수확 화면으로 먼저 보낸다
+  const harvest = isHarvestDay(TOTAL_STUDY_DAYS)
 
   const stats = [
     {
@@ -79,15 +84,21 @@ export default function StageCompletePage() {
       </dl>
 
       <div className="mt-auto flex flex-col gap-3">
-        <Button
-          onClick={() =>
-            navigate(hasNext ? ROUTES.termPreview(sector, stage + 1) : ROUTES.learn, {
-              replace: true,
-            })
-          }
-        >
-          {hasNext ? '다음 단계로' : '다른 섹터 보러 가기'}
-        </Button>
+        {harvest ? (
+          <Button onClick={() => navigate(ROUTES.harvest, { replace: true })}>
+            🎉 나무 수확하러 가기
+          </Button>
+        ) : (
+          <Button
+            onClick={() =>
+              navigate(hasNext ? ROUTES.termPreview(sector, stage + 1) : ROUTES.learn, {
+                replace: true,
+              })
+            }
+          >
+            {hasNext ? '다음 단계로' : '다른 섹터 보러 가기'}
+          </Button>
+        )}
         <Button variant="secondary" onClick={() => navigate(ROUTES.home, { replace: true })}>
           홈으로
         </Button>
