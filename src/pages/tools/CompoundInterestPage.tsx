@@ -24,14 +24,14 @@ const DEPOSIT = { min: 0, max: 3_000_000, step: 100_000 } // 매달 0 ~ 300만
 const RATE = { min: 1, max: 10, step: 0.1 } // 연 1% ~ 10% (직접 입력은 소수 둘째 자리까지)
 const YEARS = { min: 1, max: 30, step: 1 } // 1 ~ 30년
 
-/** 방식별 이름 · 용어 id(AI 튜터 연결) · 뜻 · 그래프 색 */
+/** 방식별 이름 · 용어 id(AI 튜터 연결, 서버 용어 번호) · 뜻 · 그래프 색 */
 const METHOD_INFO: Record<
   Method,
   { name: string; termId: string; meaning: string; line: string; dot: string }
 > = {
   compound: {
     name: '복리',
-    termId: 'compound',
+    termId: '4',
     meaning:
       '원금뿐 아니라 그동안 붙은 이자에도 다시 이자가 붙는 방식이에요. 오래 둘수록 불어나는 속도가 빨라져요.',
     line: 'stroke-avocado-500',
@@ -39,7 +39,7 @@ const METHOD_INFO: Record<
   },
   simple: {
     name: '단리',
-    termId: 'simple-interest',
+    termId: '3',
     meaning:
       '맡긴 원금에만 이자가 붙는 방식이에요. 붙은 이자에는 다시 이자가 붙지 않아서, 오래 둬도 늘어나는 속도는 그대로예요.',
     line: 'stroke-apricot-600',

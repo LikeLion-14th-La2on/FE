@@ -19,17 +19,17 @@ const AMOUNT = { min: 10_000_000, max: 500_000_000, step: 10_000_000 } // 1천�
 const RATE = { min: 1, max: 10, step: 0.1 } // 연 1% ~ 10% (직접 입력은 소수 둘째 자리까지)
 const MONTHS = { min: 6, max: 360, step: 6 } // 6개월 ~ 30년
 
-/** 방식별 이름 · 용어 id(AI 튜터 연결) · 뜻 */
+/** 방식별 이름 · 용어 id(AI 튜터 연결, 서버 용어 번호 · 만기일시는 서버에 없는 용어) · 뜻 */
 const METHOD_INFO: Record<Method, { name: string; termId: string; meaning: string }> = {
   equalPrincipal: {
     name: '원금균등',
-    termId: 'equal-principal',
+    termId: '9',
     meaning:
       '빌린 돈(원금)을 매달 똑같이 나눠 갚고, 남은 원금에 대한 이자를 더해 내는 방식이에요. 처음엔 많이 내고, 갈수록 내는 돈이 줄어요.',
   },
   equalPayment: {
     name: '원리금균등',
-    termId: 'equal-payment',
+    termId: '10',
     meaning:
       '원금과 이자를 합친 금액을 매달 똑같이 내는 방식이에요. 처음엔 이자 비중이 크고, 갈수록 원금 비중이 커져요.',
   },
