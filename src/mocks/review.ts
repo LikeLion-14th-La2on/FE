@@ -1,40 +1,8 @@
 /**
  * 복습 목업 데이터
- * - 카드뉴스 복습: 어제 재출제에서도 틀린 문제 (오늘 학습 전에 보여줌)
  * - 오답노트: 카드뉴스에서도 틀린 문제, 주차별로 모아 해설만 보여줌
  */
 import type { Sector } from '@/constants/sectors'
-
-export type ReviewCard = {
-  id: string
-  termId: string
-  sector: Sector
-  title: string
-  body: string
-  prompt: string
-  answer: 'O' | 'X'
-}
-
-export const YESTERDAY_REVIEW: ReviewCard[] = [
-  {
-    id: 'r1',
-    termId: 'dividend',
-    sector: 'stock',
-    title: '배당',
-    body: '회사가 번 돈을 주주에게 나눠 주는 것. 현금 대신 주식으로 줄 수도 있어요.',
-    prompt: '배당은 반드시 현금으로만 준다?',
-    answer: 'X',
-  },
-  {
-    id: 'r2',
-    termId: 'jeonse-ratio',
-    sector: 'life',
-    title: '전세가율',
-    body: '집값에서 전세보증금이 차지하는 비율. 높을수록 보증금을 돌려받기 어려워질 수 있어요.',
-    prompt: '전세가율이 높을수록 보증금이 안전하다?',
-    answer: 'X',
-  },
-]
 
 export type WrongNoteItem = {
   id: string

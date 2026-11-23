@@ -94,6 +94,19 @@ export async function findStage(
   return stage
 }
 
+/**
+ * 오늘 학습을 시작할 곳: 오늘의 섹터에서 열려 있는 첫 단계.
+ * 일요일(오늘의 섹터 없음)이거나 열린 단계가 없으면 null → 섹터 선택 화면으로.
+ */
+export async function findTodayStart(): Promise<{ sector: Sector; stepNo: number } | null> {
+  const { sectors } = await getSectors()
+  const today = sectors.find((s) => s.isToday)
+  if (!today) return null
+  const stages = await getStages(today.sectorId)
+  const open = stages.find((s) => s.status === 'UNLOCKED')
+  return open ? { sector: toSector(today.name), stepNo: open.stepNo } : null
+}
+
 /** 단계 하나의 학습 세션 (용어 미리보기 → 문제 풀이에서 같은 걸 다시 받지 않게 기억) */
 const sessionCache = new Map<number, Promise<Session>>()
 
