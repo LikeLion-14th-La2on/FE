@@ -55,10 +55,11 @@ export async function loginWithKakao(code: string): Promise<LoginResult> {
   return data
 }
 
-/** 온보딩에서 아직 안 끝낸 첫 화면 (약관 → 닉네임 → 레벨 테스트 → 홈). 로그인 응답 · 내 정보 둘 다 받는다 */
+/** 온보딩에서 아직 안 끝낸 첫 화면 (약관 → 닉네임 → 레벨 테스트 안내 → 홈). 로그인 응답 · 내 정보 둘 다 받는다 */
 export function nextRouteAfterLogin({ onboarding }: { onboarding: Onboarding }) {
   if (!onboarding.termsAgreed) return ROUTES.terms
   if (!onboarding.nicknameSet) return ROUTES.nickname
-  if (onboarding.levelTestStatus === 'NONE') return ROUTES.levelTest
+  // 레벨 테스트는 항상 안내 화면을 먼저 보여 준다
+  if (onboarding.levelTestStatus === 'NONE') return ROUTES.levelTestIntro
   return ROUTES.home
 }

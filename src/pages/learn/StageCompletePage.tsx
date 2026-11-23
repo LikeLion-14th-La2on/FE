@@ -2,7 +2,7 @@
  * 단계 완수: 정답률 · 도토리 · 연속 학습 · 새 용어 (단계 완수 API 응답)
  * - 문제 풀이가 단계 완수 응답과 맞힌 수를 state로 넘겨준다.
  * - dailyRewarded가 true일 때만 '오늘 학습 완료' 안내를 보여 준다 (이미 끝낸 단계를 다시 푼 경우 등은 false).
- * - 나무가 다 자라면(treeCompleted) 내 숲에 심었다고 알려 준다.
+ * - 나무가 다 자라면(treeCompleted) 내 숲에 심었다고 알려 주고, '다음 단계로' 대신 나무 수확 화면으로 보낸다.
  */
 import clsx from 'clsx'
 import { useLocation, useNavigate } from 'react-router'
@@ -11,6 +11,7 @@ import type { StageCompleteResult } from '@/api/learn'
 import { Button, Character } from '@/components/common'
 import { SECTORS } from '@/constants/sectors'
 import { useStageParams } from '@/hooks/useStageParams'
+import type { HarvestState } from '@/pages/home/HarvestPage'
 import { STAGE_COUNT } from '@/mocks/learn'
 import { ROUTES } from '@/router/routes'
 
@@ -93,15 +94,26 @@ export default function StageCompletePage() {
       </dl>
 
       <div className="mt-auto flex flex-col gap-gap pt-[85px]">
-        <Button
-          onClick={() =>
-            navigate(hasNext ? ROUTES.termPreview(sector, stage + 1) : ROUTES.learn, {
-              replace: true,
-            })
-          }
-        >
-          {hasNext ? '다음 단계로' : '다른 섹터 보러 가기'}
-        </Button>
+        {r?.treeCompleted ? (
+          <Button
+            onClick={() => {
+              const harvest: HarvestState = { acornBalance: r.acornBalance, streak: r.streak }
+              navigate(ROUTES.harvest, { replace: true, state: harvest })
+            }}
+          >
+            🎉 나무 수확하러 가기
+          </Button>
+        ) : (
+          <Button
+            onClick={() =>
+              navigate(hasNext ? ROUTES.termPreview(sector, stage + 1) : ROUTES.learn, {
+                replace: true,
+              })
+            }
+          >
+            {hasNext ? '다음 단계로' : '다른 섹터 보러 가기'}
+          </Button>
+        )}
         <Button variant="secondary" onClick={() => navigate(ROUTES.home, { replace: true })}>
           홈으로
         </Button>

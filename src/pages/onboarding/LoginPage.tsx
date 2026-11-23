@@ -1,8 +1,30 @@
-/** 로그인: 캐릭터 + 서비스 소개 + 카카오로 시작하기 */
-import { kakaoAuthorizeUrl } from '@/api/auth'
+/**
+ * 로그인: 캐릭터 + 서비스 소개 + 카카오로 시작하기
+ * - 이미 로그인한 사용자(토큰 있음)가 앱을 다시 열면, 내 정보(GET /users/me)의 온보딩 상태를 보고
+ *   남은 단계(약관 → 닉네임 → 레벨 테스트) 또는 홈으로 바로 보낸다.
+ * - 토큰이 만료돼 재발급도 실패하면 공통 호출 함수가 토큰을 지우고, 이 화면에 그대로 남는다.
+ */
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router'
+
+import { kakaoAuthorizeUrl, nextRouteAfterLogin } from '@/api/auth'
+import { getMe } from '@/api/user'
 import squirrel from '@/assets/squirrel.webp'
 
 export default function LoginPage() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!localStorage.getItem('accessToken')) return
+    const controller = new AbortController()
+    getMe(controller.signal)
+      .then((me) => navigate(nextRouteAfterLogin(me), { replace: true }))
+      .catch(() => {
+        // 로그인이 풀렸거나 서버 오류면 카카오 로그인 버튼을 그대로 보여 준다
+      })
+    return () => controller.abort()
+  }, [navigate])
+
   return (
     <div className="mx-auto min-h-dvh w-full max-w-app bg-apricot-700">
       <main className="flex min-h-dvh flex-col px-gutter pt-gutter pb-[calc(var(--spacing-gutter)+env(safe-area-inset-bottom))]">
