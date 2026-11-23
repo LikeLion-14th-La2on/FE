@@ -26,6 +26,20 @@ export const OX_CLASS: Record<'O' | 'X', string> = {
   X: 'bg-burnt-orange-500 shadow-[0_4px_0_var(--color-burnt-orange-700)]',
 }
 
+/**
+ * 단어 뒤 '이에요/예요' (받침 있으면 이에요). 끝의 괄호(예: 담보인정비율(LTV))는 빼고 본다.
+ * 한글로 안 끝나면(영문·숫자) '이에요'
+ */
+export function withIeyo(word: string): string {
+  const last = word
+    .replace(/\s*\([^)]*\)$/, '')
+    .trim()
+    .slice(-1)
+  const code = last.charCodeAt(0) - 0xac00
+  if (code < 0 || code > 11171) return `${word}이에요`
+  return code % 28 === 0 ? `${word}예요` : `${word}이에요`
+}
+
 export const choicesOf = (q: SessionQuestion): string[] =>
   Array.isArray(q.choices) ? q.choices : []
 
@@ -65,5 +79,7 @@ export function wrongTitle(q: SessionQuestion, correctAnswer: AnswerValue): stri
   if (q.type === 'MATCHING') return '아쉬워요, 짝이 틀린 곳이 있어요'
   const i = Number(correctAnswer)
   const option = choicesOf(q)[i]
-  return option ? `아쉬워요, 정답은 ${CIRCLED[i]}번 ${option}이에요` : '아쉬워요, 정답이 아니에요'
+  return option
+    ? `아쉬워요, 정답은 ${CIRCLED[i]}번 ${withIeyo(option)}`
+    : '아쉬워요, 정답이 아니에요'
 }
