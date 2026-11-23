@@ -1,5 +1,5 @@
 /**
- * 나무 수확: 도토리 7개가 다 열린 날(누적 학습일이 7의 배수가 된 날) 보여 주는 화면
+ * 나무 수확: 나무가 다 자란 날(단계 완수 응답 treeCompleted) 단계 완수 화면에서 넘어오는 화면
  * - 위 카드: 다 자란 나무 + 꼭대기의 다람쥐 + 수확 보너스
  * - 아래 카드: 이어서 키울 나무 (같은 계절이면 같은 계절 나무, 다람쥐는 맨 아래에서 다시 시작)
  * Figma 975 → 390 (÷2.5)
@@ -14,13 +14,7 @@ import acorn45 from '@/assets/acorn/acorn-45.svg'
 import acornM15 from '@/assets/acorn/acorn-m15.svg'
 import acornM30 from '@/assets/acorn/acorn-m30.svg'
 import { Card, Character } from '@/components/common'
-import {
-  ACORNS_PER_TREE,
-  getSeason,
-  getTreeProgress,
-  HARVEST_BONUS,
-  toOrdinal,
-} from '@/constants/tree'
+import { ACORNS_PER_TREE, getSeason, HARVEST_BONUS, toOrdinal } from '@/constants/tree'
 import { ROUTES } from '@/router/routes'
 
 /** 단계 완수 화면이 단계 완수 응답에서 넘겨주는 값 (수확 보너스가 더해진 도토리 · 연속 학습일) */
@@ -28,8 +22,8 @@ export type HarvestState = { acornBalance: number; streak: number }
 
 // 주소로 바로 들어왔을 때(state 없음) 보여 줄 값
 const FALLBACK: HarvestState = { acornBalance: 0, streak: 0 }
-// TODO: 몇 번째 나무인지는 단계 완수 응답에 없어서 목업 (누적 학습일 user_streaks.total_study_days 받으면 교체)
-const TOTAL_STUDY_DAYS = 7
+// TODO: 몇 번째 나무인지는 단계 완수 응답에 없어서 목업 (백엔드에 수확한 나무 번호 요청)
+const HARVESTED_TREE_NO = 1
 
 /** 도토리 7자리 (나무 이미지 기준 %, 홈 배치와 같은 기준) + 바깥쪽일수록 바깥으로 기운 도토리 */
 const ACORN_SPOTS = [
@@ -46,9 +40,6 @@ const ACORN_SIZE = 17.7 // 나무 폭 대비 %
 export default function HarvestPage() {
   const navigate = useNavigate()
   const { acornBalance, streak } = (useLocation().state as HarvestState | null) ?? FALLBACK
-  // 오늘 7번째 도토리가 열려 일수가 7의 배수가 됐으니, 지금 나무 번호는 이미 다음 나무를 가리킨다
-  const { treeIndex: nextIndex } = getTreeProgress(TOTAL_STUDY_DAYS)
-  const harvestedIndex = Math.max(nextIndex - 1, 0)
   // 같은 계절 안에서는 같은 계절 나무: 수확한 나무도, 이어서 키울 나무도 지금 계절
   const season = getSeason()
 
@@ -69,7 +60,7 @@ export default function HarvestPage() {
       {/* 수확한 나무 */}
       <section className="rounded-[24px] bg-apricot-200 px-gutter pt-[22px] pb-7 shadow-[0_6px_0_var(--color-apricot-300)]">
         <h2 className="text-center text-[20px] font-black text-apricot-700">
-          <span aria-hidden>🎉</span> {toOrdinal(harvestedIndex + 1)} 나무 수확!
+          <span aria-hidden>🎉</span> {toOrdinal(HARVESTED_TREE_NO)} 나무 수확!
         </h2>
 
         <div className="relative mx-auto mt-4 w-[216px]">

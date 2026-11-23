@@ -1,17 +1,11 @@
-/**
- * 나무 규칙: 누적 학습일(user_streaks.total_study_days) 하나로 전부 계산한다
- * - 하루 학습(1단계 완수) → 도토리 1개, 다람쥐 한 칸 위로
- * - 7개가 다 열리면 수확(보너스 도토리) → 내 숲에 저장 → 새 나무 시작
- * - 나무 그림은 실제 계절(달)을 따른다: 같은 계절 동안 키운 나무는 모두 그 계절 나무
- * - 하루 빠뜨려도 나무는 그대로 (스트릭만 0)
- */
+/** 나무 공통: 나무 하나에 도토리 수 · 수확 보너스 · 계절 나무 · 'n번째' 표시 */
 import treeAutumn from '@/assets/tree/tree-autumn.svg'
 import treeSpring from '@/assets/tree/tree-spring.svg'
 import treeSummer from '@/assets/tree/tree-summer.svg'
 import treeWinter from '@/assets/tree/tree-winter.svg'
 
 export const ACORNS_PER_TREE = 7
-/** 수확 보너스 (도토리 내역 사유 TREE_HARVEST) */
+/** 수확 보너스: Figma 수확 화면의 "+20 도토리 획득" (TODO: 실제 지급액은 백엔드에 확인) */
 export const HARVEST_BONUS = 20
 
 export const SEASONS = {
@@ -27,17 +21,6 @@ export function getSeason(month = new Date().getMonth() + 1) {
   if (month >= 6 && month <= 8) return SEASONS.summer
   if (month >= 9 && month <= 11) return SEASONS.autumn
   return SEASONS.winter
-}
-
-/**
- * 누적 학습일 → 지금 키우는 나무
- * - treeIndex: 몇 번째 나무인지 (0부터, = 숲에 심은 나무 수)
- * - acornCount: 지금 나무에 열린 도토리 (= 일수 ÷ 7의 나머지)
- */
-export function getTreeProgress(totalStudyDays: number) {
-  const days = Math.max(Math.floor(totalStudyDays), 0)
-  const treeIndex = Math.floor(days / ACORNS_PER_TREE)
-  return { treeIndex, acornCount: days % ACORNS_PER_TREE }
 }
 
 const ORDINALS = ['첫', '두', '세', '네', '다섯', '여섯', '일곱', '여덟', '아홉', '열']
