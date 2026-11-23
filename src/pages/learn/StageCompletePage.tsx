@@ -1,34 +1,36 @@
-/** 단계 완수: 정답률 · 도토리 · 연속 학습 · 새 용어 */
+/**
+ * 단계 완수: 정답률 · 도토리 · 연속 학습 · 새 용어 (단계 완수 API 응답)
+ * - 문제 풀이가 단계 완수 응답과 맞힌 수를 state로 넘겨준다.
+ * - dailyRewarded가 true일 때만 '오늘 학습 완료' 안내를 보여 준다 (이미 끝낸 단계를 다시 푼 경우 등은 false).
+ * - 나무가 다 자라면(treeCompleted) 내 숲에 심었다고 알려 주고, '다음 단계로' 대신 나무 수확 화면으로 보낸다.
+ */
 import clsx from 'clsx'
 import { useLocation, useNavigate } from 'react-router'
 
+import type { StageCompleteResult } from '@/api/learn'
 import { Button, Character } from '@/components/common'
 import { SECTORS } from '@/constants/sectors'
-import { isHarvestDay } from '@/constants/tree'
 import { useStageParams } from '@/hooks/useStageParams'
+import type { HarvestState } from '@/pages/home/HarvestPage'
 import { STAGE_COUNT } from '@/mocks/learn'
 import { ROUTES } from '@/router/routes'
 
-import type { StageResult } from './quiz/answer'
-
-const STAGE_ACORN = 10 // 단계 최초 완수 보상 (목업)
-const STREAK_DAYS = 6 // 연속 학습일 (목업)
-// TODO: 단계 완수 응답의 누적 학습일(user_streaks.total_study_days)로 교체
-const TOTAL_STUDY_DAYS = 7
+export type StageCompleteState = {
+  result: StageCompleteResult
+  /** 첫 풀이에서 맞힌 수 / 전체 문제 수 */
+  correct: number
+  total: number
+  /** 다시 풀기에서도 틀린 문제 수 (내일 카드뉴스) */
+  stillWrong: number
+}
 
 export default function StageCompletePage() {
   const navigate = useNavigate()
   const { sector, stage } = useStageParams()
-  const result = (useLocation().state as StageResult | null) ?? {
-    correct: 0,
-    total: 5,
-    stillWrong: 0,
-    newTerms: 0,
-  }
-  const rate = result.total ? Math.round((result.correct / result.total) * 100) : 0
-  const hasNext = stage < STAGE_COUNT
-  // 오늘 학습으로 도토리 7개를 다 채웠으면 다음 단계 대신 수확 화면으로 먼저 보낸다
-  const harvest = isHarvestDay(TOTAL_STUDY_DAYS)
+  const state = useLocation().state as StageCompleteState | null
+  const r = state?.result
+  const rate = state?.total ? Math.round((state.correct / state.total) * 100) : 0
+  const hasNext = r ? r.nextStageId !== null : stage < STAGE_COUNT
 
   const stats = [
     {
@@ -39,53 +41,66 @@ export default function StageCompletePage() {
     },
     {
       label: '도토리',
-      value: `🌰 +${STAGE_ACORN}`,
+      value: `🌰 +${r?.acornEarned ?? 0}`,
       box: 'bg-apricot-100',
       text: 'text-burnt-orange-600',
     },
     {
       label: '연속 학습',
-      value: `🔥 ${STREAK_DAYS}일 연속`,
+      value: `🔥 ${r?.streak ?? 0}일 연속`,
       box: 'bg-apricot-100',
       text: 'text-apricot-700',
     },
     {
       label: '새 용어',
-      value: `${result.newTerms}개`,
+      value: `${r?.newTermCount ?? 0}개`,
       box: 'bg-coconut-100 shadow-card',
       text: 'text-herb-500',
     },
   ]
 
   return (
-    <div className="flex flex-1 flex-col gap-gap pt-8">
-      <div className="flex flex-col items-center gap-3 text-center">
-        <Character size={140} />
-        <h1 className="text-[26px] leading-tight font-black">
-          {SECTORS[sector].label} {stage}단계 완수!
-        </h1>
-        {result.stillWrong > 0 && (
-          <p className="text-sub text-avocado-400">
-            틀린 문제 {result.stillWrong}개는 내일 카드뉴스로 다시 보여드려요
-          </p>
-        )}
+    <div className="flex flex-1 flex-col gap-gap">
+      <div aria-hidden className="h-[85px] shrink-0" />
+      <div className="flex justify-center">
+        <Character width={171} />
       </div>
+      <h1 className="text-center text-[26px] leading-[1.4] font-black text-herb">
+        {SECTORS[sector].label} {stage}단계 완수!
+      </h1>
+      {r?.dailyRewarded && (
+        <p className="text-center text-[14px] leading-[1.4] font-bold text-apricot-700">
+          {r.treeCompleted
+            ? '오늘 학습 완료! 나무가 다 자라서 내 숲에 심었어요'
+            : '오늘 학습 완료! 나무에 도토리가 붙었어요'}
+        </p>
+      )}
+      {(state?.stillWrong ?? 0) > 0 && (
+        <p className="text-center text-[13px] leading-[1.4] text-avocado-400">
+          틀린 문제 {state?.stillWrong}개는 내일 카드뉴스로 다시 보여드려요
+        </p>
+      )}
 
-      <dl className="grid grid-cols-2 gap-3">
+      <dl className="grid grid-cols-2 gap-2.5">
         {stats.map((s) => (
           <div
             key={s.label}
-            className={clsx('flex flex-col items-center gap-1 rounded-option px-4 py-4', s.box)}
+            className={clsx('flex flex-col items-center gap-1 rounded-[24px] p-4', s.box)}
           >
-            <dt className={clsx('text-sub font-bold', s.text)}>{s.label}</dt>
-            <dd className="text-[22px] leading-tight font-black">{s.value}</dd>
+            <dt className={clsx('text-[12px] leading-[1.4] font-bold', s.text)}>{s.label}</dt>
+            <dd className="text-[22px] leading-[1.4] font-black text-herb">{s.value}</dd>
           </div>
         ))}
       </dl>
 
-      <div className="mt-auto flex flex-col gap-3">
-        {harvest ? (
-          <Button onClick={() => navigate(ROUTES.harvest, { replace: true })}>
+      <div className="mt-auto flex flex-col gap-gap pt-[85px]">
+        {r?.treeCompleted ? (
+          <Button
+            onClick={() => {
+              const harvest: HarvestState = { acornBalance: r.acornBalance, streak: r.streak }
+              navigate(ROUTES.harvest, { replace: true, state: harvest })
+            }}
+          >
             🎉 나무 수확하러 가기
           </Button>
         ) : (

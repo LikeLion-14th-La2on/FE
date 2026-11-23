@@ -6,7 +6,7 @@
  */
 import clsx from 'clsx'
 import type { ReactNode } from 'react'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 
 import acorn0 from '@/assets/acorn/acorn-0.svg'
 import acorn15 from '@/assets/acorn/acorn-15.svg'
@@ -23,12 +23,13 @@ import {
 } from '@/constants/tree'
 import { ROUTES } from '@/router/routes'
 
-// TODO: 홈 API 연결 후 실제 값으로 교체 (totalStudyDays = user_streaks.total_study_days, 수확 보너스가 더해진 도토리)
-const MOCK = {
-  streakDays: 5,
-  acornTotal: 50,
-  totalStudyDays: 7,
-}
+/** 단계 완수 화면이 단계 완수 응답에서 넘겨주는 값 (수확 보너스가 더해진 도토리 · 연속 학습일) */
+export type HarvestState = { acornBalance: number; streak: number }
+
+// 주소로 바로 들어왔을 때(state 없음) 보여 줄 값
+const FALLBACK: HarvestState = { acornBalance: 0, streak: 0 }
+// TODO: 몇 번째 나무인지는 단계 완수 응답에 없어서 목업 (누적 학습일 user_streaks.total_study_days 받으면 교체)
+const TOTAL_STUDY_DAYS = 7
 
 /** 도토리 7자리 (나무 이미지 기준 %, 홈 배치와 같은 기준) + 바깥쪽일수록 바깥으로 기운 도토리 */
 const ACORN_SPOTS = [
@@ -44,8 +45,9 @@ const ACORN_SIZE = 17.7 // 나무 폭 대비 %
 
 export default function HarvestPage() {
   const navigate = useNavigate()
+  const { acornBalance, streak } = (useLocation().state as HarvestState | null) ?? FALLBACK
   // 오늘 7번째 도토리가 열려 일수가 7의 배수가 됐으니, 지금 나무 번호는 이미 다음 나무를 가리킨다
-  const { treeIndex: nextIndex } = getTreeProgress(MOCK.totalStudyDays)
+  const { treeIndex: nextIndex } = getTreeProgress(TOTAL_STUDY_DAYS)
   const harvestedIndex = Math.max(nextIndex - 1, 0)
   // 같은 계절 안에서는 같은 계절 나무: 수확한 나무도, 이어서 키울 나무도 지금 계절
   const season = getSeason()
@@ -56,10 +58,10 @@ export default function HarvestPage() {
         <h1 className="text-[24px] font-black text-herb">도토리치</h1>
         <div className="flex gap-[6px]">
           <Chip className="bg-apricot-200 text-apricot-700" icon="🔥" label="연속 학습">
-            {MOCK.streakDays}
+            {streak}
           </Chip>
           <Chip className="bg-avocado-200 text-avocado-500" icon="🌰" label="도토리">
-            {MOCK.acornTotal}
+            {acornBalance}
           </Chip>
         </div>
       </header>
@@ -81,8 +83,11 @@ export default function HarvestPage() {
               style={{ left: `${left}%`, top: `${top}%`, width: `${ACORN_SIZE}%` }}
             />
           ))}
-          {/* 다람쥐: 꼭대기 (TODO: 장착한 캐릭터 이미지로 교체) */}
-          <Character size={52} className="absolute -top-2 right-[14px] text-[10px] leading-tight" />
+          {/* 다람쥐: 꼭대기 (TODO: 장착한 캐릭터로 교체) */}
+          {/* Character는 자체가 relative라, 위치는 감싼 칸으로 잡는다 */}
+          <div className="absolute -top-5 right-[16px]">
+            <Character width={46} />
+          </div>
         </div>
 
         {/* 홈 '학습 시작' 버튼처럼 아래 그림자 + 누르면 눌림, 받고 나면 홈으로 */}
@@ -106,10 +111,9 @@ export default function HarvestPage() {
         <div className="relative mx-auto mt-3 w-[160px]">
           <img src={season.image} alt={`${season.name} 나무`} className="w-full" />
           {/* 다람쥐: 줄기 맨 아래에서 다시 시작 */}
-          <Character
-            size={36}
-            className="absolute right-[38px] bottom-[4px] text-[7px] leading-tight"
-          />
+          <div className="absolute right-[30px] bottom-0">
+            <Character width={34} />
+          </div>
         </div>
         <p className="mt-3 text-center text-sub text-herb-300">
           내일부터 도토리 {ACORNS_PER_TREE}개를 다시 모아요

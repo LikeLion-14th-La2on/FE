@@ -40,11 +40,6 @@ export function getTreeProgress(totalStudyDays: number) {
   return { treeIndex, acornCount: days % ACORNS_PER_TREE }
 }
 
-/** 오늘 학습으로 막 7개를 채웠는지 (= 수확 화면을 보여 줄 때): 일수가 7의 배수가 된 순간 */
-export function isHarvestDay(totalStudyDays: number) {
-  return totalStudyDays > 0 && totalStudyDays % ACORNS_PER_TREE === 0
-}
-
 const ORDINALS = ['첫', '두', '세', '네', '다섯', '여섯', '일곱', '여덟', '아홉', '열']
 
 /** 1 → '첫 번째', 2 → '두 번째' … 11부터는 '11번째' */
