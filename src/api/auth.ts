@@ -11,11 +11,18 @@ const redirectUri = () => `${window.location.origin}${ROUTES.kakaoCallback}`
 
 export type LevelTestStatus = 'NONE' | 'DONE' | 'SKIPPED'
 
+/** 온보딩 진행 상태 (로그인 응답 · 내 정보 조회 공통) */
+export type Onboarding = {
+  termsAgreed: boolean
+  nicknameSet: boolean
+  levelTestStatus: LevelTestStatus
+}
+
 export type LoginResult = {
   accessToken: string
   refreshToken: string
   isNewUser: boolean
-  onboarding: { termsAgreed: boolean; nicknameSet: boolean; levelTestStatus: LevelTestStatus }
+  onboarding: Onboarding
 }
 
 /** 카카오 로그인 버튼을 누르면 이동할 주소 */
@@ -48,8 +55,8 @@ export async function loginWithKakao(code: string): Promise<LoginResult> {
   return data
 }
 
-/** 온보딩에서 아직 안 끝낸 첫 화면 (약관 → 닉네임 → 레벨 테스트 → 홈) */
-export function nextRouteAfterLogin({ onboarding }: LoginResult) {
+/** 온보딩에서 아직 안 끝낸 첫 화면 (약관 → 닉네임 → 레벨 테스트 → 홈). 로그인 응답 · 내 정보 둘 다 받는다 */
+export function nextRouteAfterLogin({ onboarding }: { onboarding: Onboarding }) {
   if (!onboarding.termsAgreed) return ROUTES.terms
   if (!onboarding.nicknameSet) return ROUTES.nickname
   if (onboarding.levelTestStatus === 'NONE') return ROUTES.levelTest
