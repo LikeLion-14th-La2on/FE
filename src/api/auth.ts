@@ -27,7 +27,10 @@ export type LoginResult = {
 
 /** 카카오 로그인 버튼을 누르면 이동할 주소 */
 export function kakaoAuthorizeUrl() {
-  const state = crypto.randomUUID()
+  // crypto.randomUUID()는 HTTPS · localhost에서만 있어서, HTTP 배포 서버에서도 되는 getRandomValues로 만든다
+  const state = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) =>
+    b.toString(16).padStart(2, '0'),
+  ).join('')
   sessionStorage.setItem('kakaoState', state)
   const params = new URLSearchParams({
     client_id: KAKAO_REST_API_KEY,
