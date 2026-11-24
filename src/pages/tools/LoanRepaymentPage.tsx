@@ -25,23 +25,23 @@ const MONTHS = { min: 6, max: 360, step: 6 } // 6개월 ~ 30년
 const clamp = (value: number, { min, max }: { min: number; max: number }) =>
   Math.min(Math.max(value, min), max)
 
-/** 방식별 이름 · 용어 id(AI 튜터 연결) · 뜻 */
-const METHOD_INFO: Record<Method, { name: string; termId: string; meaning: string }> = {
+/** 방식별 이름 · 서버 용어 번호(AI 튜터 연결, 서버에 없는 용어는 null → AI 튜터 버튼 숨김) · 뜻 */
+const METHOD_INFO: Record<Method, { name: string; termId: number | null; meaning: string }> = {
   equalPrincipal: {
     name: '원금균등',
-    termId: 'equal-principal',
+    termId: 9,
     meaning:
       '빌린 돈(원금)을 매달 똑같이 나눠 갚고, 남은 원금에 대한 이자를 더해 내는 방식이에요. 처음엔 많이 내고, 갈수록 내는 돈이 줄어요.',
   },
   equalPayment: {
     name: '원리금균등',
-    termId: 'equal-payment',
+    termId: 10,
     meaning:
       '원금과 이자를 합친 금액을 매달 똑같이 내는 방식이에요. 처음엔 이자 비중이 크고, 갈수록 원금 비중이 커져요.',
   },
   bullet: {
     name: '만기일시',
-    termId: 'bullet-repayment',
+    termId: null,
     meaning:
       '빌리는 동안에는 이자만 내고, 마지막 달에 원금을 한 번에 갚는 방식이에요. 매달 부담은 적지만 이자는 가장 많이 내요.',
   },
@@ -256,17 +256,20 @@ export default function LoanRepaymentPage() {
             {/* flex-basis가 Button의 w-full보다 우선해서 확인 버튼은 96px로 고정된다 */}
             <Button
               variant="secondary"
-              className="flex-[0_0_96px]"
+              // AI 튜터 버튼이 있으면 96px, 없으면(서버에 없는 용어) 혼자 꽉 채운다
+              className={METHOD_INFO[openMethod].termId === null ? 'flex-1' : 'flex-[0_0_96px]'}
               onClick={() => setOpenMethod(null)}
             >
               확인
             </Button>
-            <Button
-              className="flex-1"
-              onClick={() => navigate(ROUTES.aiTutor(METHOD_INFO[openMethod].termId))}
-            >
-              AI 튜터에게 물어보기
-            </Button>
+            {METHOD_INFO[openMethod].termId !== null && (
+              <Button
+                className="flex-1"
+                onClick={() => navigate(ROUTES.aiTutor(String(METHOD_INFO[openMethod].termId)))}
+              >
+                AI 튜터에게 물어보기
+              </Button>
+            )}
           </div>
         </BottomSheet>
       )}

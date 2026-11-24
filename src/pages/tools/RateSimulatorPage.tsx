@@ -33,16 +33,20 @@ const TABLE_CHANGES = [-1, 0, 1, 2, 3]
 const clamp = (value: number, { min, max }: { min: number; max: number }) =>
   Math.min(Math.max(value, min), max)
 
-const TERM_INFO: Record<Term, { name: string; termId: string; meaning: string }> = {
+/**
+ * 용어 이름 · 서버 용어 번호(AI 튜터 연결) · 뜻
+ * TODO: 변동금리 · 고정금리의 서버 용어 번호를 받으면 채우기 (null이면 AI 튜터 버튼 숨김)
+ */
+const TERM_INFO: Record<Term, { name: string; termId: number | null; meaning: string }> = {
   variable: {
     name: '변동금리',
-    termId: 'variable-rate',
+    termId: null,
     meaning:
       '대출 기간 동안 시장 금리(기준금리 등)에 따라 정해진 때마다 금리가 바뀌는 방식이에요. 금리가 내리면 이자가 줄지만, 오르면 매달 내는 돈이 늘어나요.',
   },
   fixed: {
     name: '고정금리',
-    termId: 'fixed-rate',
+    termId: null,
     meaning:
       '처음 정한 금리가 대출 기간 내내 그대로인 방식이에요. 시장 금리가 올라도 내는 돈이 같지만, 보통 변동금리보다 처음 금리가 조금 높아요.',
   },
@@ -284,17 +288,20 @@ export default function RateSimulatorPage() {
           <div className="mt-2 flex gap-2">
             <Button
               variant="secondary"
-              className="flex-[0_0_96px]"
+              // AI 튜터 버튼이 있으면 96px, 없으면(서버에 없는 용어) 혼자 꽉 채운다
+              className={TERM_INFO[openTerm].termId === null ? 'flex-1' : 'flex-[0_0_96px]'}
               onClick={() => setOpenTerm(null)}
             >
               확인
             </Button>
-            <Button
-              className="flex-1"
-              onClick={() => navigate(ROUTES.aiTutor(TERM_INFO[openTerm].termId))}
-            >
-              AI 튜터에게 물어보기
-            </Button>
+            {TERM_INFO[openTerm].termId !== null && (
+              <Button
+                className="flex-1"
+                onClick={() => navigate(ROUTES.aiTutor(String(TERM_INFO[openTerm].termId)))}
+              >
+                AI 튜터에게 물어보기
+              </Button>
+            )}
           </div>
         </BottomSheet>
       )}

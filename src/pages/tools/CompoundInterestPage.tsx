@@ -30,14 +30,14 @@ const YEARS = { min: 1, max: 30, step: 1 } // 1 ~ 30년
 const clamp = (value: number, { min, max }: { min: number; max: number }) =>
   Math.min(Math.max(value, min), max)
 
-/** 방식별 이름 · 용어 id(AI 튜터 연결) · 뜻 · 그래프 색 */
+/** 방식별 이름 · 서버 용어 번호(AI 튜터 연결) · 뜻 · 그래프 색 */
 const METHOD_INFO: Record<
   Method,
-  { name: string; termId: string; meaning: string; line: string; dot: string }
+  { name: string; termId: number | null; meaning: string; line: string; dot: string }
 > = {
   compound: {
     name: '복리',
-    termId: 'compound',
+    termId: 4,
     meaning:
       '원금뿐 아니라 그동안 붙은 이자에도 다시 이자가 붙는 방식이에요. 오래 둘수록 불어나는 속도가 빨라져요.',
     line: 'stroke-avocado-500',
@@ -45,7 +45,7 @@ const METHOD_INFO: Record<
   },
   simple: {
     name: '단리',
-    termId: 'simple-interest',
+    termId: 3,
     meaning:
       '맡긴 원금에만 이자가 붙는 방식이에요. 붙은 이자에는 다시 이자가 붙지 않아서, 오래 둬도 늘어나는 속도는 그대로예요.',
     line: 'stroke-apricot-600',
@@ -285,17 +285,20 @@ export default function CompoundInterestPage() {
             {/* flex-basis가 Button의 w-full보다 우선해서 확인 버튼은 96px로 고정된다 */}
             <Button
               variant="secondary"
-              className="flex-[0_0_96px]"
+              // AI 튜터 버튼이 있으면 96px, 없으면(서버에 없는 용어) 혼자 꽉 채운다
+              className={METHOD_INFO[openMethod].termId === null ? 'flex-1' : 'flex-[0_0_96px]'}
               onClick={() => setOpenMethod(null)}
             >
               확인
             </Button>
-            <Button
-              className="flex-1"
-              onClick={() => navigate(ROUTES.aiTutor(METHOD_INFO[openMethod].termId))}
-            >
-              AI 튜터에게 물어보기
-            </Button>
+            {METHOD_INFO[openMethod].termId !== null && (
+              <Button
+                className="flex-1"
+                onClick={() => navigate(ROUTES.aiTutor(String(METHOD_INFO[openMethod].termId)))}
+              >
+                AI 튜터에게 물어보기
+              </Button>
+            )}
           </div>
         </BottomSheet>
       )}
