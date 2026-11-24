@@ -5,6 +5,7 @@ import PlainLayout from '@/components/layout/PlainLayout'
 import GlossaryPage from '@/pages/glossary/GlossaryPage'
 import TermDetailPage from '@/pages/glossary/TermDetailPage'
 import ForestPage from '@/pages/home/ForestPage'
+import HarvestPage from '@/pages/home/HarvestPage'
 import HomePage from '@/pages/home/HomePage'
 import QuizPage from '@/pages/learn/QuizPage'
 import SectorStagePage from '@/pages/learn/SectorStagePage'
@@ -39,6 +40,8 @@ export const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { path: ROUTES.home, element: <HomePage /> },
+      // 나무 수확은 Figma처럼 하단 바를 보여 준다
+      { path: ROUTES.harvest, element: <HarvestPage /> },
       { path: ROUTES.news, element: <NewsPage /> },
       { path: ROUTES.wrongNote, element: <WrongNotePage /> },
       { path: ROUTES.tools, element: <ToolsPage /> },
