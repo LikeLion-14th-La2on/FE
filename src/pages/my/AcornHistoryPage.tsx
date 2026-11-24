@@ -14,7 +14,7 @@ import { useApi } from '@/hooks/useApi'
 import { ROUTES } from '@/router/routes'
 
 /**
- * 내역 사유 코드 → 화면 문구 (명세에 나온 코드만, 모르는 코드는 받음 · 사용으로)
+ * 내역 사유 코드 → 화면 문구 (명세 · 리뷰로 받은 코드만, 모르는 코드는 받음 · 사용으로)
  * TODO: 백엔드에 사유 코드 전체 목록 받으면 채우기
  */
 const REASON_LABEL: Record<string, string> = {
@@ -22,6 +22,8 @@ const REASON_LABEL: Record<string, string> = {
   AI_TUTOR: 'AI 튜터 질문',
   STREAK_SHIELD: '스트릭 보호권 구매',
   CHARACTER: '캐릭터 구매',
+  STREAK_BREAK: '연속 학습이 끊겨 떨어짐',
+  TREE_COMPLETE: '나무 완성',
 }
 
 const reasonText = (reason: string, amount: number) =>
