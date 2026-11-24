@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router'
 
 import { BottomSheet, Button } from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
-import { useToolConditions } from '@/hooks/useToolConditions'
+import { toSavedValue, useToolConditions } from '@/hooks/useToolConditions'
 import { ROUTES } from '@/router/routes'
 
 type Term = 'variable' | 'fixed'
@@ -29,24 +29,20 @@ const CHANGE = { min: -3, max: 3, step: 0.25 } // 금리 변동폭 -3%p ~ +3%p (
 /** 금리별 표에 보여 줄 변동폭 */
 const TABLE_CHANGES = [-1, 0, 1, 2, 3]
 
-/** 저장값이 범위 밖이면 슬라이더 끝으로 맞춘다 */
-const clamp = (value: number, { min, max }: { min: number; max: number }) =>
-  Math.min(Math.max(value, min), max)
-
 /**
  * 용어 이름 · 서버 용어 번호(AI 튜터 연결) · 뜻
- * TODO: 변동금리 · 고정금리의 서버 용어 번호를 받으면 채우기 (null이면 AI 튜터 버튼 숨김)
+ * - 서버 용어 번호: 변동금리 31 · 고정금리 30 (null이면 AI 튜터 버튼 숨김)
  */
 const TERM_INFO: Record<Term, { name: string; termId: number | null; meaning: string }> = {
   variable: {
     name: '변동금리',
-    termId: null,
+    termId: 31,
     meaning:
       '대출 기간 동안 시장 금리(기준금리 등)에 따라 정해진 때마다 금리가 바뀌는 방식이에요. 금리가 내리면 이자가 줄지만, 오르면 매달 내는 돈이 늘어나요.',
   },
   fixed: {
     name: '고정금리',
-    termId: null,
+    termId: 30,
     meaning:
       '처음 정한 금리가 대출 기간 내내 그대로인 방식이에요. 시장 금리가 올라도 내는 돈이 같지만, 보통 변동금리보다 처음 금리가 조금 높아요.',
   },
@@ -86,10 +82,10 @@ export default function RateSimulatorPage() {
     'RATE_CHANGE',
     { principal: amount, rate, months, rateChange: change },
     (saved) => {
-      setAmount(clamp(saved.principal, AMOUNT))
-      setRate(clamp(saved.rate, RATE))
-      setMonths(clamp(saved.months, MONTHS))
-      setChange(clamp(saved.rateChange, CHANGE))
+      setAmount(toSavedValue(saved.principal, AMOUNT, amount))
+      setRate(toSavedValue(saved.rate, RATE, rate))
+      setMonths(toSavedValue(saved.months, MONTHS, months))
+      setChange(toSavedValue(saved.rateChange, CHANGE, change))
     },
   )
 
@@ -114,7 +110,7 @@ export default function RateSimulatorPage() {
   /** 바텀시트 예시: 지금 입력한 값으로 */
   const exampleText: Record<Term, string> = {
     variable: `예) ${formatWon(amount)}을 ${months}개월, 연 ${formatRate(rate)}로 빌렸는데 금리가 ${formatChange(change)} 바뀌면 매달 ${formatWon(now.payment)} → ${formatWon(after.payment)}`,
-    fixed: `예) ${formatWon(amount)}을 ${months}개월, 연 ${formatRate(rate)} 고정으로 빌리면 시장 금리가 바뀌어도 매달 ${formatWon(now.payment)}로 같아요`,
+    fixed: `예) ${formatWon(amount)}을 ${months}개월, 연 ${formatRate(rate)} 고정으로 빌리면 시장 금리가 바뀌어도 매달 ${formatWon(now.payment)}으로 같아요`,
   }
 
   const onChangeOf = (set: (v: number) => void) => (v: number) => {
@@ -232,7 +228,7 @@ export default function RateSimulatorPage() {
             <InfoIcon className="size-[12px]" />
             <span className="sr-only">뜻 보기</span>
           </button>
-          라면 매달 {formatWon(now.payment)}로 그대로예요
+          라면 매달 {formatWon(now.payment)}으로 그대로예요
         </p>
       </section>
 

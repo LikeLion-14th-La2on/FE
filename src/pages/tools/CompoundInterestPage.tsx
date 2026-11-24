@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router'
 
 import { BottomSheet, Button } from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
-import { useToolConditions } from '@/hooks/useToolConditions'
+import { toSavedValue, useToolConditions } from '@/hooks/useToolConditions'
 import { ROUTES } from '@/router/routes'
 
 type Method = 'compound' | 'simple'
@@ -25,10 +25,6 @@ const PRINCIPAL = { min: 0, max: 100_000_000, step: 1_000_000 } // 0 ~ 1억
 const DEPOSIT = { min: 0, max: 3_000_000, step: 100_000 } // 매달 0 ~ 300만
 const RATE = { min: 1, max: 10, step: 0.1 } // 연 1% ~ 10% (직접 입력은 소수 둘째 자리까지)
 const YEARS = { min: 1, max: 30, step: 1 } // 1 ~ 30년
-
-/** 저장값이 범위 밖이면 슬라이더 끝으로 맞춘다 */
-const clamp = (value: number, { min, max }: { min: number; max: number }) =>
-  Math.min(Math.max(value, min), max)
 
 /** 방식별 이름 · 서버 용어 번호(AI 튜터 연결) · 뜻 · 그래프 색 */
 const METHOD_INFO: Record<
@@ -88,10 +84,10 @@ export default function CompoundInterestPage() {
   const [rate, setRate] = useState(5)
   const [years, setYears] = useState(10)
   const touched = useToolConditions('COMPOUND', { principal, deposit, rate, years }, (saved) => {
-    setPrincipal(clamp(saved.principal, PRINCIPAL))
-    setDeposit(clamp(saved.deposit, DEPOSIT))
-    setRate(clamp(saved.rate, RATE))
-    setYears(clamp(saved.years, YEARS))
+    setPrincipal(toSavedValue(saved.principal, PRINCIPAL, principal))
+    setDeposit(toSavedValue(saved.deposit, DEPOSIT, deposit))
+    setRate(toSavedValue(saved.rate, RATE, rate))
+    setYears(toSavedValue(saved.years, YEARS, years))
   })
   const [openMethod, setOpenMethod] = useState<Method | null>(null)
 

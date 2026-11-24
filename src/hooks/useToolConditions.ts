@@ -13,6 +13,19 @@ import { getToolConditions, saveToolConditions, type ParamsOf, type ToolType } f
 
 const SAVE_DELAY = 1000
 
+/**
+ * 저장값 → 슬라이더 값: 숫자가 아니면(문자열 · null · NaN 등) 지금 값(기본값) 그대로,
+ * 범위 밖이면 슬라이더 끝으로 맞춘다 (서버는 params를 검사 없이 그대로 저장해서 무엇이든 올 수 있다)
+ */
+export function toSavedValue(
+  value: unknown,
+  { min, max }: { min: number; max: number },
+  fallback: number,
+) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback
+  return Math.min(Math.max(value, min), max)
+}
+
 export function useToolConditions<T extends ToolType>(
   toolType: T,
   params: ParamsOf<T>,

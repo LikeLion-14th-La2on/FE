@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router'
 
 import { BottomSheet, Button } from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
-import { useToolConditions } from '@/hooks/useToolConditions'
+import { toSavedValue, useToolConditions } from '@/hooks/useToolConditions'
 import { ROUTES } from '@/router/routes'
 
 type Method = 'equalPrincipal' | 'equalPayment' | 'bullet'
@@ -20,10 +20,6 @@ type Method = 'equalPrincipal' | 'equalPayment' | 'bullet'
 const AMOUNT = { min: 10_000_000, max: 500_000_000, step: 10_000_000 } // 1천만 ~ 5억
 const RATE = { min: 1, max: 10, step: 0.1 } // 연 1% ~ 10% (직접 입력은 소수 둘째 자리까지)
 const MONTHS = { min: 6, max: 360, step: 6 } // 6개월 ~ 30년
-
-/** 저장값이 범위 밖이면 슬라이더 끝으로 맞춘다 */
-const clamp = (value: number, { min, max }: { min: number; max: number }) =>
-  Math.min(Math.max(value, min), max)
 
 /** 방식별 이름 · 서버 용어 번호(AI 튜터 연결, 서버에 없는 용어는 null → AI 튜터 버튼 숨김) · 뜻 */
 const METHOD_INFO: Record<Method, { name: string; termId: number | null; meaning: string }> = {
@@ -92,9 +88,9 @@ export default function LoanRepaymentPage() {
   const [months, setMonths] = useState(24)
   const [openMethod, setOpenMethod] = useState<Method | null>(null)
   const touched = useToolConditions('LOAN', { principal: amount, rate, months }, (saved) => {
-    setAmount(clamp(saved.principal, AMOUNT))
-    setRate(clamp(saved.rate, RATE))
-    setMonths(clamp(saved.months, MONTHS))
+    setAmount(toSavedValue(saved.principal, AMOUNT, amount))
+    setRate(toSavedValue(saved.rate, RATE, rate))
+    setMonths(toSavedValue(saved.months, MONTHS, months))
   })
 
   const result = calculate(amount, rate, months)
