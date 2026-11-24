@@ -1,8 +1,10 @@
 /**
- * 카카오 로그인 (백엔드 POST /api/v1/auth/kakao)
+ * 카카오 로그인 (백엔드 POST /api/v1/auth/kakao) · 로그아웃
  * 흐름: 카카오 인가 페이지 → /oauth/kakao?code=… → 백엔드에 code 전달 → 토큰 저장
  */
 import { ROUTES } from '@/router/routes'
+
+import { api } from './client'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 const KAKAO_REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY ?? ''
@@ -63,3 +65,6 @@ export function nextRouteAfterLogin({ onboarding }: { onboarding: Onboarding }) 
   if (onboarding.levelTestStatus === 'NONE') return ROUTES.levelTestIntro
   return ROUTES.home
 }
+
+/** 로그아웃: 서버에 저장된 refreshToken을 무효로 만든다 (기기에 저장된 토큰은 화면에서 지운다) */
+export const logout = () => api<null>('/api/v1/auth/logout', { method: 'POST' })

@@ -1,67 +1,61 @@
 /**
  * 도토리 내역: 도토리 잔액 + 받은 배지 + 도토리 내역(acorn_ledger, 최신순)
+ * - 보상 조회(GET /users/me/rewards) 한 번으로 셋 다 받는다
+ * - 내역 사유는 서버 코드(DAILY_STUDY 등)로 와서 화면 문구로 바꾼다
  * (Figma 디자인 없음 — 마이페이지 카드 스타일에 맞춤)
  */
 import clsx from 'clsx'
 import { useNavigate } from 'react-router'
 
+import { getRewards } from '@/api/user'
+import { LoadError, Loading } from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
+import { useApi } from '@/hooks/useApi'
 import { ROUTES } from '@/router/routes'
 
-type LedgerItem = {
-  id: string
-  /** 받으면 +, 쓰면 - */
-  amount: number
-  reason: string
-  createdAt: string
+/**
+ * 내역 사유 코드 → 화면 문구 (명세에 나온 코드만, 모르는 코드는 받음 · 사용으로)
+ * TODO: 백엔드에 사유 코드 전체 목록 받으면 채우기
+ */
+const REASON_LABEL: Record<string, string> = {
+  DAILY_STUDY: '오늘 학습 완료',
+  AI_TUTOR: 'AI 튜터 질문',
+  STREAK_SHIELD: '스트릭 보호권 구매',
+  CHARACTER: '캐릭터 구매',
 }
 
-type Badge = {
-  id: string
-  name: string
-  emoji: string
-}
+const reasonText = (reason: string, amount: number) =>
+  REASON_LABEL[reason] ?? (amount > 0 ? '도토리 받음' : '도토리 사용')
 
-// TODO: 도토리 내역 API 연결 후 교체 (서버가 내역을 최신순으로 준다)
-const MOCK: { balance: number; ledger: LedgerItem[]; badges: Badge[] } = {
-  balance: 30,
-  ledger: [
-    { id: '5', amount: 10, reason: '주식 2단계 완료', createdAt: '2026-11-17T09:12:00' },
-    { id: '4', amount: -20, reason: '스트릭 보호권 구매', createdAt: '2026-11-16T21:40:00' },
-    { id: '3', amount: 10, reason: '금융 기초 3단계 완료', createdAt: '2026-11-15T18:03:00' },
-    { id: '2', amount: 20, reason: '5일 연속 학습', createdAt: '2026-11-14T08:30:00' },
-    { id: '1', amount: 10, reason: '레벨 테스트 완료', createdAt: '2026-11-10T12:00:00' },
-  ],
-  badges: [
-    { id: 'first-step', name: '첫 걸음', emoji: '🌱' },
-    { id: 'streak-5', name: '5일 연속', emoji: '🔥' },
-    { id: 'basic-clear', name: '기초 완주', emoji: '📘' },
-  ],
-}
-
-/** '2026-11-17T09:12:00' → '11월 17일' */
+/** '2026-11-17T09:12:00+09:00' → '11월 17일' */
 function formatDate(iso: string) {
   const date = new Date(iso)
-  return `${date.getMonth() + 1}월 ${date.getDate()}일`
+  return Number.isNaN(date.getTime()) ? '' : `${date.getMonth() + 1}월 ${date.getDate()}일`
 }
 
 export default function AcornHistoryPage() {
-  const navigate = useNavigate()
-  const { balance, ledger, badges } = MOCK
+  const rewards = useApi(getRewards, 'rewards')
+
+  if (rewards.status === 'loading')
+    return (
+      <>
+        <Header />
+        <Loading label="도토리 내역을 불러오고 있어요" />
+      </>
+    )
+  if (rewards.status === 'error')
+    return (
+      <>
+        <Header />
+        <LoadError message={rewards.error.message} onRetry={rewards.reload} />
+      </>
+    )
+
+  const { acornBalance: balance, acornHistory: ledger, badges } = rewards.data
 
   return (
     <>
-      <header className="flex items-center">
-        <button
-          type="button"
-          aria-label="뒤로 가기"
-          onClick={() => navigate(ROUTES.my)}
-          className="flex h-10 w-8 items-center text-herb"
-        >
-          <BackIcon className="w-[19px]" />
-        </button>
-        <h1 className="text-[18px] font-bold text-herb">도토리 내역</h1>
-      </header>
+      <Header />
 
       {/* 잔액 */}
       <section className="mt-[18px] flex h-24 flex-col justify-center rounded-card bg-apricot-600 px-gutter shadow-[0_4px_12px_rgb(0_0_0/0.05)]">
@@ -76,15 +70,20 @@ export default function AcornHistoryPage() {
         <h2 className="text-[17px] leading-[1.4] font-black text-herb">받은 배지</h2>
         {badges.length > 0 ? (
           <ul className="mt-3 grid grid-cols-4 gap-2">
-            {badges.map(({ id, name, emoji }) => (
-              <li key={id} className="flex flex-col items-center gap-1">
+            {badges.map(({ badgeId, name, imageUrl }) => (
+              <li key={badgeId} className="flex flex-col items-center gap-1">
                 <span
                   aria-hidden
-                  className="flex size-12 items-center justify-center rounded-full bg-coconut-100 text-[22px]"
+                  className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-coconut-100 text-[22px]"
                 >
-                  {emoji}
+                  {/* 배지 이미지가 없으면 메달로 */}
+                  {imageUrl ? (
+                    <img src={imageUrl} alt="" className="size-9 object-contain" />
+                  ) : (
+                    '🏅'
+                  )}
                 </span>
-                <span className="text-tag text-herb">{name}</span>
+                <span className="text-center text-tag break-keep text-herb">{name}</span>
               </li>
             ))}
           </ul>
@@ -98,10 +97,11 @@ export default function AcornHistoryPage() {
         <h2 className="text-[17px] leading-[1.4] font-black text-herb">내역</h2>
         {ledger.length > 0 ? (
           <ul className="mt-1 divide-y divide-avocado-100">
-            {ledger.map(({ id, amount, reason, createdAt }) => (
-              <li key={id} className="flex items-center justify-between py-3">
+            {ledger.map(({ amount, reason, createdAt }, i) => (
+              // 내역에는 id가 없어서 시각 + 순서로 구분한다
+              <li key={`${createdAt}-${i}`} className="flex items-center justify-between py-3">
                 <div>
-                  <p className="text-[14px] font-bold text-herb">{reason}</p>
+                  <p className="text-[14px] font-bold text-herb">{reasonText(reason, amount)}</p>
                   <p className="text-sub text-herb-300">{formatDate(createdAt)}</p>
                 </div>
                 <p
@@ -120,5 +120,23 @@ export default function AcornHistoryPage() {
         )}
       </section>
     </>
+  )
+}
+
+/** 위쪽 제목 줄 (불러오는 중 · 오류 화면에도 보여 준다) */
+function Header() {
+  const navigate = useNavigate()
+  return (
+    <header className="flex items-center">
+      <button
+        type="button"
+        aria-label="뒤로 가기"
+        onClick={() => navigate(ROUTES.my)}
+        className="flex h-10 w-8 items-center text-herb"
+      >
+        <BackIcon className="w-[19px]" />
+      </button>
+      <h1 className="text-[18px] font-bold text-herb">도토리 내역</h1>
+    </header>
   )
 }

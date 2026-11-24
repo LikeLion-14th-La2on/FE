@@ -1,32 +1,34 @@
 /**
  * 마이페이지: 프로필 카드 + 요약 3칸(완수 단계 · 도토리 · 연속) + 섹터별 진행도 + 메뉴
  * - 닉네임 수정 · 스트릭 보호권 · 로그아웃/회원탈퇴는 바텀시트, 도토리 내역은 새 페이지
+ * - 닉네임 · 캐릭터 · 도토리는 내 정보(GET /users/me), 완수 단계 · 연속 · 섹터별 진행도는
+ *   학습 현황(GET /users/me/stats)에서 함께 불러온다
  * Figma 975 → 390 (÷2.5)
  */
 import clsx from 'clsx'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
-import { BottomSheet, Button, ProgressBar } from '@/components/common'
+import { logout } from '@/api/auth'
+import { ApiError } from '@/api/client'
+import { buyShield } from '@/api/streak'
+import { toSector } from '@/api/types'
+import { checkNickname, getMe, getStats, updateNickname, withdraw } from '@/api/user'
+import { BottomSheet, Button, LoadError, Loading, ProgressBar } from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
+import { isValidNickname, NICKNAME_MAX_LENGTH, NICKNAME_RULE_TEXT } from '@/constants/nickname'
 import { SECTORS, type Sector } from '@/constants/sectors'
+import { useApi } from '@/hooks/useApi'
 import { ROUTES } from '@/router/routes'
 
-// TODO: 사용자 정보 · 학습 진행 API 연결 후 교체
-const MOCK = {
-  nickname: '도토리부자',
-  clearedStages: 4,
-  acornTotal: 30,
-  streakDays: 5,
-  shieldCount: 0, // 가진 스트릭 보호권 수
-  progress: {
-    stock: { cleared: 2, total: 3 },
-    life: { cleared: 1, total: 3 },
-    basic: { cleared: 3, total: 3 },
-  } as Record<Sector, { cleared: number; total: number }>,
-}
+// TODO: 가진 보호권 수를 처음에 알려 주는 API가 없어서 목업 (구매하면 응답 값으로 바뀐다)
+const MOCK_SHIELD_COUNT = 0
 
-const NICKNAME_MAX_LENGTH = 10
+/** 내 정보 + 학습 현황을 한 번에 */
+const loadMyPage = async (signal: AbortSignal) => {
+  const [me, stats] = await Promise.all([getMe(signal), getStats(signal)])
+  return { me, stats }
+}
 
 /** 스트릭 보호권: 도토리 5개에 1개, 최대 2개까지 가질 수 있다 */
 const SHIELD_PRICE = 5
@@ -45,21 +47,49 @@ const BAR_COLOR: Record<Sector, { track: string; fill: string }> = {
 
 export default function MyPage() {
   const navigate = useNavigate()
-  const [nickname, setNickname] = useState(MOCK.nickname)
+  const page = useApi(loadMyPage, 'my-page')
+  /** 이 화면에서 닉네임을 고친 경우에만 값이 있다 (없으면 서버 값) */
+  const [editedNickname, setEditedNickname] = useState<string | null>(null)
+  /** 보호권을 산 뒤의 값 (사기 전엔 null → 서버 값 · 목업) */
+  const [bought, setBought] = useState<{ shieldCount: number; acornBalance: number } | null>(null)
   const [sheet, setSheet] = useState<Sheet>(null)
   const closeSheet = () => setSheet(null)
 
-  const stats = [
+  if (page.status === 'loading')
+    return (
+      <>
+        <Header />
+        <Loading label="마이페이지를 불러오고 있어요" />
+      </>
+    )
+  if (page.status === 'error')
+    return (
+      <>
+        <Header />
+        <LoadError message={page.error.message} onRetry={page.reload} />
+      </>
+    )
+
+  const { me, stats } = page.data
+  const nickname = editedNickname ?? me.nickname ?? ''
+  const acornBalance = bought?.acornBalance ?? me.acornBalance
+  const shieldCount = bought?.shieldCount ?? MOCK_SHIELD_COUNT
+  // 서버 섹터 이름 → 화면 섹터 키 (주식 · 생활 금융 · 금융 기초 순서로 보여 준다)
+  const progress = new Map(
+    stats.sectors.map((s) => [toSector(s.name), { cleared: s.passedStepNo, total: s.totalSteps }]),
+  )
+
+  const summary = [
     {
       label: '완수 단계',
-      value: MOCK.clearedStages,
+      value: stats.completedStageCount,
       box: 'bg-avocado-400',
       num: 'text-coconut-100',
       sub: 'text-avocado-100',
     },
     {
       label: '도토리',
-      value: MOCK.acornTotal,
+      value: acornBalance,
       emoji: '🌰',
       box: 'bg-apricot-200',
       num: 'text-apricot-800',
@@ -67,7 +97,7 @@ export default function MyPage() {
     },
     {
       label: '연속',
-      value: MOCK.streakDays,
+      value: stats.streak,
       emoji: '🔥',
       box: 'bg-herb-100',
       num: 'text-herb',
@@ -84,26 +114,24 @@ export default function MyPage() {
 
   return (
     <>
-      <header className="flex items-center">
-        <button
-          type="button"
-          aria-label="뒤로 가기"
-          onClick={() => navigate(ROUTES.home)}
-          className="flex h-10 w-8 items-center text-herb"
-        >
-          <BackIcon className="w-[19px]" />
-        </button>
-        <h1 className="text-[18px] font-bold text-herb">마이페이지</h1>
-      </header>
+      <Header />
 
       {/* 프로필 */}
       <section className="mt-[18px] flex h-24 items-center gap-4 rounded-card bg-apricot-600 px-4 shadow-[0_4px_12px_rgb(0_0_0/0.05)]">
-        {/* TODO: 캐릭터 이미지가 정해지면 교체 (지금은 디자인의 자리 표시) */}
-        <div className="flex size-16 shrink-0 items-center justify-center rounded-full border border-dashed border-[#8aa39e] bg-[#dce5e2] text-center text-[9px] leading-tight text-[#5f7a75]">
-          다람쥐
-          <br />
-          캐릭터
-        </div>
+        {me.characterImageUrl ? (
+          <img
+            src={me.characterImageUrl}
+            alt="장착한 캐릭터"
+            className="size-16 shrink-0 rounded-full bg-coconut-100 object-contain"
+          />
+        ) : (
+          // 장착한 캐릭터 이미지가 없을 때 디자인의 자리 표시
+          <div className="flex size-16 shrink-0 items-center justify-center rounded-full border border-dashed border-[#8aa39e] bg-[#dce5e2] text-center text-[9px] leading-tight text-[#5f7a75]">
+            다람쥐
+            <br />
+            캐릭터
+          </div>
+        )}
         <div>
           <p className="text-[20px] leading-[1.4] font-bold text-coconut-100">{nickname}</p>
           <button
@@ -118,7 +146,7 @@ export default function MyPage() {
 
       {/* 요약 3칸 */}
       <ul className="mt-gap grid grid-cols-3 gap-2">
-        {stats.map(({ label, value, emoji, box, num, sub }) => (
+        {summary.map(({ label, value, emoji, box, num, sub }) => (
           <li
             key={label}
             className={clsx('flex h-[66px] flex-col items-center rounded-2xl pt-[13px]', box)}
@@ -142,7 +170,9 @@ export default function MyPage() {
         <ul className="mt-2 flex flex-col gap-[10px]">
           {SECTOR_ORDER.map((key) => {
             const { label, emoji } = SECTORS[key]
-            const { cleared, total } = MOCK.progress[key]
+            const sector = progress.get(key)
+            if (!sector) return null
+            const { cleared, total } = sector
             return (
               <li key={key}>
                 <p className="text-[13px] leading-[1.4] font-medium text-herb">
@@ -192,18 +222,73 @@ export default function MyPage() {
           current={nickname}
           onClose={closeSheet}
           onSave={(next) => {
-            setNickname(next)
+            setEditedNickname(next)
             closeSheet()
           }}
         />
       )}
-      {sheet === 'shield' && <ShieldSheet onClose={closeSheet} />}
+      {sheet === 'shield' && (
+        <ShieldSheet
+          shieldCount={shieldCount}
+          acornBalance={acornBalance}
+          onBought={setBought}
+          onClose={closeSheet}
+        />
+      )}
       {sheet === 'account' && <AccountSheet onClose={closeSheet} />}
     </>
   )
 }
 
-/** 닉네임 수정: 닉네임 설정 화면과 같은 규칙 (최대 10자, 빈칸 불가) */
+/** 위쪽 제목 줄 (불러오는 중 · 오류 화면에도 보여 준다) */
+function Header() {
+  const navigate = useNavigate()
+  return (
+    <header className="flex items-center">
+      <button
+        type="button"
+        aria-label="뒤로 가기"
+        onClick={() => navigate(ROUTES.home)}
+        className="flex h-10 w-8 items-center text-herb"
+      >
+        <BackIcon className="w-[19px]" />
+      </button>
+      <h1 className="text-[18px] font-bold text-herb">마이페이지</h1>
+    </header>
+  )
+}
+
+/** 입력이 멈춘 뒤 중복 확인까지 기다리는 시간 (닉네임 설정 화면과 같음) */
+const CHECK_DELAY = 300
+
+type CheckStatus = 'available' | 'taken' | 'error'
+/** 어떤 닉네임을 확인한 결과인지 같이 기억한다 (입력이 바뀌면 이전 결과는 안 쓴다) */
+type Check = { nickname: string; status: CheckStatus; message?: string }
+
+const CHECK_TEXT: Record<
+  CheckStatus | 'checking' | 'invalid',
+  { text: string; className: string }
+> = {
+  invalid: { text: NICKNAME_RULE_TEXT, className: 'text-burnt-orange-600' },
+  checking: { text: '확인하고 있어요', className: 'text-herb-300' },
+  available: { text: '✓ 사용 가능한 닉네임이에요', className: 'text-avocado-500' },
+  taken: { text: '이미 사용 중인 닉네임이에요', className: 'text-burnt-orange-600' },
+  error: { text: '잠시 후 다시 시도해 주세요', className: 'text-burnt-orange-600' },
+}
+
+/** 실패한 요청을 화면에 보여 줄 결과로 (E409는 '이미 사용 중', 그 밖은 서버 메시지) */
+function toCheck(nickname: string, e: unknown): Check {
+  if (e instanceof ApiError && e.code === 'E409') return { nickname, status: 'taken' }
+  return { nickname, status: 'error', message: e instanceof ApiError ? e.message : undefined }
+}
+
+/**
+ * 닉네임 수정: 닉네임 설정 화면과 같은 규칙 (최대 10자, 빈칸 불가)
+ * - 형식(한글 · 영문 · 숫자 2~10자)부터 검사하고, 맞을 때만 입력이 멈추고 0.3초 뒤 중복 확인(GET /users/check-nickname)
+ * - 지금 닉네임과 같으면 확인하지 않는다
+ * - 사용 가능할 때만 저장 → 닉네임 수정(PATCH /users/me/nickname) 성공하면 시트를 닫고 새 닉네임 표시
+ * - 확인 뒤 그 사이 다른 사람이 먼저 쓰면(E409) '이미 사용 중'으로 바꿔 보여 준다
+ */
 function NicknameSheet({
   current,
   onClose,
@@ -215,17 +300,53 @@ function NicknameSheet({
 }) {
   const [value, setValue] = useState(current)
   const trimmed = value.trim()
-  // TODO: 닉네임 중복 확인 API 연결 후 결과로 교체
-  const canSave = trimmed.length > 0 && trimmed.length <= NICKNAME_MAX_LENGTH && trimmed !== current
+  const [check, setCheck] = useState<Check | null>(null)
+  const [sending, setSending] = useState(false)
+  const changed = trimmed.length > 0 && trimmed !== current
+  const valid = isValidNickname(trimmed)
+
+  useEffect(() => {
+    if (!changed || !valid) return
+    const controller = new AbortController()
+    const timer = window.setTimeout(() => {
+      checkNickname(trimmed, controller.signal)
+        .then(({ available }) =>
+          setCheck({ nickname: trimmed, status: available ? 'available' : 'taken' }),
+        )
+        .catch((e: unknown) => {
+          if (!controller.signal.aborted) setCheck(toCheck(trimmed, e))
+        })
+    }, CHECK_DELAY)
+    return () => {
+      window.clearTimeout(timer)
+      controller.abort()
+    }
+  }, [trimmed, changed, valid])
+
+  // 빈칸이거나 지금 닉네임 그대로면 안내 없음 → 형식이 틀리면 규칙 안내 → 결과가 아직 없으면 '확인 중'
+  const status = !changed
+    ? null
+    : !valid
+      ? 'invalid'
+      : check?.nickname === trimmed
+        ? check.status
+        : 'checking'
+  const canSave = status === 'available' && !sending
 
   const handleSave = () => {
-    // TODO: 닉네임 저장 API 연결 (성공하면 onSave)
-    onSave(trimmed)
+    if (!canSave) return
+    setSending(true)
+    updateNickname(trimmed)
+      .then(({ nickname }) => onSave(nickname))
+      .catch((e: unknown) => {
+        setCheck(toCheck(trimmed, e))
+        setSending(false)
+      })
   }
 
   return (
     <BottomSheet open onClose={onClose} labelledBy="nickname-sheet-title">
-      <h2 id="nickname-sheet-title" className="text-title text-coconut-100">
+      <h2 id="nickname-sheet-title" className="text-title text-herb">
         닉네임 수정
       </h2>
       <label className="flex h-[60px] items-center gap-2 rounded-btn border-2 border-herb-500 bg-coconut-100 px-gutter">
@@ -241,8 +362,16 @@ function NicknameSheet({
           {value.length}/{NICKNAME_MAX_LENGTH}
         </span>
       </label>
+      {status && (
+        <p
+          role={status === 'checking' ? 'status' : 'alert'}
+          className={clsx('text-sub', CHECK_TEXT[status].className)}
+        >
+          {status === 'error' && check?.message ? check.message : CHECK_TEXT[status].text}
+        </p>
+      )}
       <Button className="mt-2 w-full" disabled={!canSave} onClick={handleSave}>
-        저장
+        {sending ? '저장하고 있어요' : '저장'}
       </Button>
     </BottomSheet>
   )
@@ -252,15 +381,36 @@ function NicknameSheet({
  * 스트릭 보호권: 도토리로 1개씩 산다 (최대 2개)
  * 서버가 홈 조회 때 끊김을 판정하면서, 빠진 날 수만큼 보호권이 있으면 자동으로 쓴다 (1개당 하루).
  * 보호권이 빠진 날보다 적으면 쓰지 않고 남겨 두고, 연속 학습은 끊긴다.
+ * - 사기(POST /streak/shields): 성공하면 시트를 닫지 않고 늘어난 보호권 · 줄어든 도토리를 바로 보여 준다
+ * - 실패하면(최대 개수 · 도토리 부족 등) 버튼 위에 서버 메시지
  */
-function ShieldSheet({ onClose }: { onClose: () => void }) {
-  const { shieldCount, acornTotal } = MOCK
+function ShieldSheet({
+  shieldCount,
+  acornBalance,
+  onBought,
+  onClose,
+}: {
+  shieldCount: number
+  acornBalance: number
+  onBought: (result: { shieldCount: number; acornBalance: number }) => void
+  onClose: () => void
+}) {
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const acornTotal = acornBalance
   const isFull = shieldCount >= SHIELD_MAX
   const hasAcorns = acornTotal >= SHIELD_PRICE
 
   const handleBuy = () => {
-    // TODO: 보호권 구매 API 연결 (성공하면 보유 수 · 도토리 갱신)
-    onClose()
+    if (sending) return
+    setSending(true)
+    setError(null)
+    buyShield()
+      .then(onBought)
+      .catch((e: unknown) =>
+        setError(e instanceof ApiError ? e.message : '잠시 후 다시 시도해 주세요'),
+      )
+      .finally(() => setSending(false))
   }
 
   return (
@@ -286,12 +436,23 @@ function ShieldSheet({ onClose }: { onClose: () => void }) {
           <p className="text-title text-apricot-800">🌰 {acornTotal}</p>
         </li>
       </ul>
-      <Button className="mt-2 w-full" disabled={isFull || !hasAcorns} onClick={handleBuy}>
-        {isFull
-          ? `보호권은 최대 ${SHIELD_MAX}개까지 가질 수 있어요`
-          : hasAcorns
-            ? `🌰 ${SHIELD_PRICE}개로 1개 사기`
-            : `도토리가 부족해요 (🌰 ${SHIELD_PRICE}개 필요)`}
+      {error && (
+        <p role="alert" className="text-center text-sub text-burnt-orange-600">
+          {error}
+        </p>
+      )}
+      <Button
+        className="mt-2 w-full"
+        disabled={isFull || !hasAcorns || sending}
+        onClick={handleBuy}
+      >
+        {sending
+          ? '사는 중이에요'
+          : isFull
+            ? `보호권은 최대 ${SHIELD_MAX}개까지 가질 수 있어요`
+            : hasAcorns
+              ? `🌰 ${SHIELD_PRICE}개로 1개 사기`
+              : `도토리가 부족해요 (🌰 ${SHIELD_PRICE}개 필요)`}
       </Button>
     </BottomSheet>
   )
@@ -301,6 +462,9 @@ function ShieldSheet({ onClose }: { onClose: () => void }) {
 function AccountSheet({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate()
   const [step, setStep] = useState<'menu' | 'logout' | 'withdraw'>('menu')
+
+  const [leaving, setLeaving] = useState(false)
+  const [withdrawError, setWithdrawError] = useState<string | null>(null)
 
   /** 저장된 토큰을 지우고 로그인 화면으로 (뒤로 가기로 돌아오지 못하게 replace) */
   const leave = () => {
@@ -313,9 +477,32 @@ function AccountSheet({ onClose }: { onClose: () => void }) {
     navigate(ROUTES.login, { replace: true })
   }
 
+  /**
+   * 로그아웃(POST /auth/logout) 후 기기의 토큰을 지우고 로그인 화면으로.
+   * 서버 요청이 실패해도(네트워크 등) 사용자는 로그아웃되어야 하니 결과와 상관없이 나간다
+   */
+  const handleLogout = () => {
+    if (leaving) return
+    setLeaving(true)
+    logout()
+      .catch(() => {})
+      .finally(leave)
+  }
+
+  /**
+   * 회원탈퇴(DELETE /users/me): 로그아웃과 달리 성공했을 때만 나간다.
+   * 실패했는데 나가 버리면 탈퇴된 줄 알게 되니, 서버 메시지를 보여 주고 다시 누를 수 있게 한다
+   */
   const handleWithdraw = () => {
-    // TODO: 회원탈퇴 API 연결 (성공하면 leave)
-    leave()
+    if (leaving) return
+    setLeaving(true)
+    setWithdrawError(null)
+    withdraw()
+      .then(leave)
+      .catch((e: unknown) => {
+        setWithdrawError(e instanceof ApiError ? e.message : '잠시 후 다시 시도해 주세요')
+        setLeaving(false)
+      })
   }
 
   return (
@@ -347,8 +534,8 @@ function AccountSheet({ onClose }: { onClose: () => void }) {
             <Button variant="secondary" className="flex-1" onClick={onClose}>
               취소
             </Button>
-            <Button className="flex-1" onClick={leave}>
-              로그아웃
+            <Button className="flex-1" disabled={leaving} onClick={handleLogout}>
+              {leaving ? '로그아웃 중' : '로그아웃'}
             </Button>
           </div>
         </>
@@ -360,15 +547,21 @@ function AccountSheet({ onClose }: { onClose: () => void }) {
             정말 탈퇴할까요?
           </h2>
           <p className="text-body text-herb-400">탈퇴하면 되돌릴 수 없어요.</p>
+          {withdrawError && (
+            <p role="alert" className="text-center text-sub text-burnt-orange-600">
+              {withdrawError}
+            </p>
+          )}
           <div className="mt-2 flex gap-2">
             <Button variant="secondary" className="flex-1" onClick={onClose}>
               취소
             </Button>
             <Button
               className="flex-1 enabled:bg-burnt-orange-500 enabled:shadow-[0_4px_0_var(--color-burnt-orange-700)]"
+              disabled={leaving}
               onClick={handleWithdraw}
             >
-              탈퇴하기
+              {leaving ? '탈퇴하는 중' : '탈퇴하기'}
             </Button>
           </div>
         </>
