@@ -1,8 +1,8 @@
 /**
  * 마이페이지: 프로필 카드 + 요약 3칸(완수 단계 · 도토리 · 연속) + 섹터별 진행도 + 메뉴
  * - 닉네임 수정 · 스트릭 보호권 · 로그아웃/회원탈퇴는 바텀시트, 도토리 내역은 새 페이지
- * - 닉네임 · 캐릭터 · 도토리는 내 정보(GET /users/me), 완수 단계 · 연속 · 섹터별 진행도는
- *   학습 현황(GET /users/me/stats)에서 함께 불러온다
+ * - 닉네임 · 캐릭터는 내 정보(GET /users/me), 완수 단계 · 연속 · 섹터별 진행도는 학습 현황(GET /users/me/stats),
+ *   도토리 · 가진 보호권 수는 홈(GET /home)에서 함께 불러온다
  * Figma 975 → 390 (÷2.5)
  */
 import clsx from 'clsx'
@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router'
 
 import { logout } from '@/api/auth'
 import { ApiError } from '@/api/client'
+import { getHome } from '@/api/home'
 import { buyShield } from '@/api/streak'
 import { toSector } from '@/api/types'
 import { checkNickname, getMe, getStats, updateNickname, withdraw } from '@/api/user'
@@ -21,13 +22,13 @@ import { SECTORS, type Sector } from '@/constants/sectors'
 import { useApi } from '@/hooks/useApi'
 import { ROUTES } from '@/router/routes'
 
-// TODO: 가진 보호권 수를 처음에 알려 주는 API가 없어서 목업 (구매하면 응답 값으로 바뀐다)
-const MOCK_SHIELD_COUNT = 0
-
-/** 내 정보 + 학습 현황을 한 번에 */
+/**
+ * 내 정보 + 학습 현황 + 홈을 한 번에
+ * - 보호권 수 · 도토리 잔액은 홈 응답(끊김 처리 후 값)에서 가져온다 (보호권 수만 따로 조회하는 API는 없음)
+ */
 const loadMyPage = async (signal: AbortSignal) => {
-  const [me, stats] = await Promise.all([getMe(signal), getStats(signal)])
-  return { me, stats }
+  const [me, stats, home] = await Promise.all([getMe(signal), getStats(signal), getHome(signal)])
+  return { me, stats, home }
 }
 
 /** 스트릭 보호권: 도토리 5개에 1개, 최대 2개까지 가질 수 있다 */
@@ -70,10 +71,11 @@ export default function MyPage() {
       </>
     )
 
-  const { me, stats } = page.data
+  const { me, stats, home } = page.data
   const nickname = editedNickname ?? me.nickname ?? ''
-  const acornBalance = bought?.acornBalance ?? me.acornBalance
-  const shieldCount = bought?.shieldCount ?? MOCK_SHIELD_COUNT
+  // 처음엔 홈 응답 값, 보호권을 산 뒤에는 구매 응답 값 (홈을 다시 부르지 않는다)
+  const acornBalance = bought?.acornBalance ?? home.acornBalance
+  const shieldCount = bought?.shieldCount ?? home.streak.shieldCount
   // 서버 섹터 이름 → 화면 섹터 키 (주식 · 생활 금융 · 금융 기초 순서로 보여 준다)
   const progress = new Map(
     stats.sectors.map((s) => [toSector(s.name), { cleared: s.passedStepNo, total: s.totalSteps }]),
