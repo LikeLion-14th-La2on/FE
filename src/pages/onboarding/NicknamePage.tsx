@@ -1,5 +1,6 @@
 /**
  * 닉네임 설정: 닉네임(최대 10자)을 입력하면 레벨 테스트 안내로 이동
+ * - 형식(한글 · 영문 · 숫자 2~10자)부터 검사해서, 맞을 때만 중복 확인을 보낸다.
  * - 입력이 멈추고 0.3초 뒤 중복 확인(GET /users/check-nickname). 그 사이에 또 입력하면 이전 확인은 취소한다.
  * - 사용 가능한 닉네임일 때만 '다음'을 누를 수 있다.
  * - '다음' → 닉네임 등록(POST /users/me/nickname) 성공하면 레벨 테스트 안내로.
@@ -13,9 +14,13 @@ import { ApiError } from '@/api/client'
 import { checkNickname, registerNickname } from '@/api/user'
 import { Button, Character } from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
+import {
+  isValidNickname,
+  NICKNAME_MAX_LENGTH as MAX_LENGTH,
+  NICKNAME_RULE_TEXT,
+} from '@/constants/nickname'
 import { ROUTES } from '@/router/routes'
 
-const MAX_LENGTH = 10
 /** 입력이 멈춘 뒤 중복 확인까지 기다리는 시간 */
 const CHECK_DELAY = 300
 
@@ -23,7 +28,11 @@ type CheckStatus = 'available' | 'taken' | 'error'
 /** 어떤 닉네임을 확인한 결과인지 같이 기억한다 (입력이 바뀌면 이전 결과는 안 쓴다) */
 type Check = { nickname: string; status: CheckStatus; message?: string }
 
-const CHECK_TEXT: Record<CheckStatus | 'checking', { text: string; className: string }> = {
+const CHECK_TEXT: Record<
+  CheckStatus | 'checking' | 'invalid',
+  { text: string; className: string }
+> = {
+  invalid: { text: NICKNAME_RULE_TEXT, className: 'text-burnt-orange-600' },
   checking: { text: '확인하고 있어요', className: 'text-herb-300' },
   available: { text: '✓ 사용 가능한 닉네임이에요', className: 'text-avocado-500' },
   taken: { text: '이미 사용 중인 닉네임이에요', className: 'text-burnt-orange-600' },
@@ -44,7 +53,7 @@ export default function NicknamePage() {
   const [sending, setSending] = useState(false)
 
   useEffect(() => {
-    if (!trimmed) return
+    if (!isValidNickname(trimmed)) return
     const controller = new AbortController()
     const timer = window.setTimeout(() => {
       checkNickname(trimmed, controller.signal)
@@ -62,7 +71,14 @@ export default function NicknamePage() {
   }, [trimmed])
 
   // 빈칸이면 안내 없음, 지금 입력에 대한 결과가 아직 없으면 '확인 중'
-  const status = !trimmed ? null : check?.nickname === trimmed ? check.status : 'checking'
+  // 빈칸이면 안내 없음 → 형식이 틀리면 규칙 안내 → 지금 입력에 대한 결과가 아직 없으면 '확인 중'
+  const status = !trimmed
+    ? null
+    : !isValidNickname(trimmed)
+      ? 'invalid'
+      : check?.nickname === trimmed
+        ? check.status
+        : 'checking'
   const isAvailable = status === 'available'
 
   const handleSubmit = () => {
