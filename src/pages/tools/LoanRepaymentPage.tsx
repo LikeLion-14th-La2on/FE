@@ -3,6 +3,7 @@
  * - 결론 카드: 이자를 가장 적게 내는 방식 + 가장 많이 내는 방식과의 차이
  * - 방식별 카드: 총 이자(막대 길이 = 가장 많은 이자 대비) + 매달 내는 돈
  * - 방식 이름(ⓘ)을 누르면 뜻 바텀시트 → 확인 / AI 튜터에게 물어보기
+ * - 입력값 불러오기 · 자동 저장 (GET · PUT /tools/conditions, toolType LOAN)
  */
 import clsx from 'clsx'
 import { useState, type CSSProperties } from 'react'
@@ -10,6 +11,7 @@ import { useNavigate } from 'react-router'
 
 import { BottomSheet, Button } from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
+import { toSavedValue, useToolConditions } from '@/hooks/useToolConditions'
 import { ROUTES } from '@/router/routes'
 
 type Method = 'equalPrincipal' | 'equalPayment' | 'bullet'
@@ -19,23 +21,23 @@ const AMOUNT = { min: 10_000_000, max: 500_000_000, step: 10_000_000 } // 1천�
 const RATE = { min: 1, max: 10, step: 0.1 } // 연 1% ~ 10% (직접 입력은 소수 둘째 자리까지)
 const MONTHS = { min: 6, max: 360, step: 6 } // 6개월 ~ 30년
 
-/** 방식별 이름 · 용어 id(AI 튜터 연결) · 뜻 */
-const METHOD_INFO: Record<Method, { name: string; termId: string; meaning: string }> = {
+/** 방식별 이름 · 서버 용어 번호(AI 튜터 연결, 서버에 없는 용어는 null → AI 튜터 버튼 숨김) · 뜻 */
+const METHOD_INFO: Record<Method, { name: string; termId: number | null; meaning: string }> = {
   equalPrincipal: {
     name: '원금균등',
-    termId: 'equal-principal',
+    termId: 9,
     meaning:
       '빌린 돈(원금)을 매달 똑같이 나눠 갚고, 남은 원금에 대한 이자를 더해 내는 방식이에요. 처음엔 많이 내고, 갈수록 내는 돈이 줄어요.',
   },
   equalPayment: {
     name: '원리금균등',
-    termId: 'equal-payment',
+    termId: 10,
     meaning:
       '원금과 이자를 합친 금액을 매달 똑같이 내는 방식이에요. 처음엔 이자 비중이 크고, 갈수록 원금 비중이 커져요.',
   },
   bullet: {
     name: '만기일시',
-    termId: 'bullet-repayment',
+    termId: null,
     meaning:
       '빌리는 동안에는 이자만 내고, 마지막 달에 원금을 한 번에 갚는 방식이에요. 매달 부담은 적지만 이자는 가장 많이 내요.',
   },
@@ -85,6 +87,11 @@ export default function LoanRepaymentPage() {
   const [rate, setRate] = useState(4.5)
   const [months, setMonths] = useState(24)
   const [openMethod, setOpenMethod] = useState<Method | null>(null)
+  const touched = useToolConditions('LOAN', { principal: amount, rate, months }, (saved) => {
+    setAmount(toSavedValue(saved.principal, AMOUNT, amount))
+    setRate(toSavedValue(saved.rate, RATE, rate))
+    setMonths(toSavedValue(saved.months, MONTHS, months))
+  })
 
   const result = calculate(amount, rate, months)
 
@@ -132,7 +139,10 @@ export default function LoanRepaymentPage() {
           value={amount}
           {...AMOUNT}
           unit={{ scale: 10_000, suffix: '만 원', decimals: 0 }}
-          onChange={setAmount}
+          onChange={(v) => {
+            touched()
+            setAmount(v)
+          }}
         />
         <Slider
           label="연 금리"
@@ -140,7 +150,10 @@ export default function LoanRepaymentPage() {
           value={rate}
           {...RATE}
           unit={{ scale: 1, suffix: '%', decimals: 2 }}
-          onChange={setRate}
+          onChange={(v) => {
+            touched()
+            setRate(v)
+          }}
         />
         <Slider
           label="기간"
@@ -148,7 +161,10 @@ export default function LoanRepaymentPage() {
           value={months}
           {...MONTHS}
           unit={{ scale: 1, suffix: '개월', decimals: 0 }}
-          onChange={setMonths}
+          onChange={(v) => {
+            touched()
+            setMonths(v)
+          }}
         />
       </section>
 
@@ -236,17 +252,20 @@ export default function LoanRepaymentPage() {
             {/* flex-basis가 Button의 w-full보다 우선해서 확인 버튼은 96px로 고정된다 */}
             <Button
               variant="secondary"
-              className="flex-[0_0_96px]"
+              // AI 튜터 버튼이 있으면 96px, 없으면(서버에 없는 용어) 혼자 꽉 채운다
+              className={METHOD_INFO[openMethod].termId === null ? 'flex-1' : 'flex-[0_0_96px]'}
               onClick={() => setOpenMethod(null)}
             >
               확인
             </Button>
-            <Button
-              className="flex-1"
-              onClick={() => navigate(ROUTES.aiTutor(METHOD_INFO[openMethod].termId))}
-            >
-              AI 튜터에게 물어보기
-            </Button>
+            {METHOD_INFO[openMethod].termId !== null && (
+              <Button
+                className="flex-1"
+                onClick={() => navigate(ROUTES.aiTutor(String(METHOD_INFO[openMethod].termId)))}
+              >
+                AI 튜터에게 물어보기
+              </Button>
+            )}
           </div>
         </BottomSheet>
       )}

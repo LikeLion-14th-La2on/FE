@@ -6,6 +6,7 @@
  * - 그래프: 해마다 불어나는 돈 (단리는 거의 직선, 복리는 갈수록 가팔라지는 곡선)
  * - 방식별 카드: 받는 돈(막대 길이 = 복리 대비) + 넣은 돈 대비 이자
  * - 방식 이름(ⓘ)을 누르면 뜻 바텀시트 → 확인 / AI 튜터에게 물어보기
+ * - 입력값 불러오기 · 자동 저장 (GET · PUT /tools/conditions, toolType COMPOUND)
  * (Figma 디자인 없음 — 대출 상환 비교 화면 스타일에 맞춤)
  */
 import clsx from 'clsx'
@@ -14,6 +15,7 @@ import { useNavigate } from 'react-router'
 
 import { BottomSheet, Button } from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
+import { toSavedValue, useToolConditions } from '@/hooks/useToolConditions'
 import { ROUTES } from '@/router/routes'
 
 type Method = 'compound' | 'simple'
@@ -24,14 +26,14 @@ const DEPOSIT = { min: 0, max: 3_000_000, step: 100_000 } // 매달 0 ~ 300만
 const RATE = { min: 1, max: 10, step: 0.1 } // 연 1% ~ 10% (직접 입력은 소수 둘째 자리까지)
 const YEARS = { min: 1, max: 30, step: 1 } // 1 ~ 30년
 
-/** 방식별 이름 · 용어 id(AI 튜터 연결) · 뜻 · 그래프 색 */
+/** 방식별 이름 · 서버 용어 번호(AI 튜터 연결) · 뜻 · 그래프 색 */
 const METHOD_INFO: Record<
   Method,
-  { name: string; termId: string; meaning: string; line: string; dot: string }
+  { name: string; termId: number | null; meaning: string; line: string; dot: string }
 > = {
   compound: {
     name: '복리',
-    termId: 'compound',
+    termId: 4,
     meaning:
       '원금뿐 아니라 그동안 붙은 이자에도 다시 이자가 붙는 방식이에요. 오래 둘수록 불어나는 속도가 빨라져요.',
     line: 'stroke-avocado-500',
@@ -39,7 +41,7 @@ const METHOD_INFO: Record<
   },
   simple: {
     name: '단리',
-    termId: 'simple-interest',
+    termId: 3,
     meaning:
       '맡긴 원금에만 이자가 붙는 방식이에요. 붙은 이자에는 다시 이자가 붙지 않아서, 오래 둬도 늘어나는 속도는 그대로예요.',
     line: 'stroke-apricot-600',
@@ -81,6 +83,12 @@ export default function CompoundInterestPage() {
   const [deposit, setDeposit] = useState(100_000)
   const [rate, setRate] = useState(5)
   const [years, setYears] = useState(10)
+  const touched = useToolConditions('COMPOUND', { principal, deposit, rate, years }, (saved) => {
+    setPrincipal(toSavedValue(saved.principal, PRINCIPAL, principal))
+    setDeposit(toSavedValue(saved.deposit, DEPOSIT, deposit))
+    setRate(toSavedValue(saved.rate, RATE, rate))
+    setYears(toSavedValue(saved.years, YEARS, years))
+  })
   const [openMethod, setOpenMethod] = useState<Method | null>(null)
 
   const input = { principal, deposit, rate }
@@ -129,7 +137,10 @@ export default function CompoundInterestPage() {
           value={principal}
           {...PRINCIPAL}
           unit={{ scale: 10_000, suffix: '만 원', decimals: 0 }}
-          onChange={setPrincipal}
+          onChange={(v) => {
+            touched()
+            setPrincipal(v)
+          }}
         />
         <Slider
           label="매달 넣는 돈"
@@ -137,7 +148,10 @@ export default function CompoundInterestPage() {
           value={deposit}
           {...DEPOSIT}
           unit={{ scale: 10_000, suffix: '만 원', decimals: 0 }}
-          onChange={setDeposit}
+          onChange={(v) => {
+            touched()
+            setDeposit(v)
+          }}
         />
         <Slider
           label="연 이율"
@@ -145,7 +159,10 @@ export default function CompoundInterestPage() {
           value={rate}
           {...RATE}
           unit={{ scale: 1, suffix: '%', decimals: 2 }}
-          onChange={setRate}
+          onChange={(v) => {
+            touched()
+            setRate(v)
+          }}
         />
         <Slider
           label="기간"
@@ -153,7 +170,10 @@ export default function CompoundInterestPage() {
           value={years}
           {...YEARS}
           unit={{ scale: 1, suffix: '년', decimals: 0 }}
-          onChange={setYears}
+          onChange={(v) => {
+            touched()
+            setYears(v)
+          }}
         />
       </section>
 
@@ -261,17 +281,20 @@ export default function CompoundInterestPage() {
             {/* flex-basis가 Button의 w-full보다 우선해서 확인 버튼은 96px로 고정된다 */}
             <Button
               variant="secondary"
-              className="flex-[0_0_96px]"
+              // AI 튜터 버튼이 있으면 96px, 없으면(서버에 없는 용어) 혼자 꽉 채운다
+              className={METHOD_INFO[openMethod].termId === null ? 'flex-1' : 'flex-[0_0_96px]'}
               onClick={() => setOpenMethod(null)}
             >
               확인
             </Button>
-            <Button
-              className="flex-1"
-              onClick={() => navigate(ROUTES.aiTutor(METHOD_INFO[openMethod].termId))}
-            >
-              AI 튜터에게 물어보기
-            </Button>
+            {METHOD_INFO[openMethod].termId !== null && (
+              <Button
+                className="flex-1"
+                onClick={() => navigate(ROUTES.aiTutor(String(METHOD_INFO[openMethod].termId)))}
+              >
+                AI 튜터에게 물어보기
+              </Button>
+            )}
           </div>
         </BottomSheet>
       )}
