@@ -19,7 +19,7 @@ import {
   type Session,
   type SessionQuestion,
 } from '@/api/learn'
-import { BottomSheet, Button, LoadError, Loading, QuizTopBar } from '@/components/common'
+import { BottomSheet, Button, Character, LoadError, Loading, QuizTopBar } from '@/components/common'
 import type { Sector } from '@/constants/sectors'
 import { useConfirmBack } from '@/hooks/useConfirmBack'
 import { saveReturnSnapshot, useReturnSnapshot } from '@/hooks/useReturnSnapshot'
@@ -304,12 +304,11 @@ function QuizRun({ session, sector, stage }: { session: Session; sector: Sector;
         )}
       </div>
 
-      <BottomSheet
-        open={exitOpen}
-        onClose={() => setExitOpen(false)}
-        labelledBy="quiz-exit-title"
-        peek
-      >
+      <BottomSheet open={exitOpen} onClose={() => setExitOpen(false)} labelledBy="quiz-exit-title">
+        {/* 그만두려는 순간이라 우는 다람쥐 */}
+        <div className="flex justify-center">
+          <Character width={88} pose="sad" />
+        </div>
         <h2 id="quiz-exit-title" className="text-[20px] leading-[1.4] font-black text-herb">
           학습을 그만둘까요?
         </h2>

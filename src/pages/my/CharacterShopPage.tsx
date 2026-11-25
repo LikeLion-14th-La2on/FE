@@ -7,7 +7,7 @@
  * - 구매(POST /characters/{id}/purchase): 성공하면 보유로 바뀌고 도토리가 줄어든다 (다시 불러오지 않고 응답으로 갱신)
  * - 장착(PATCH /users/me/character): 성공하면 그 카드가 '장착중'이 되고 고른 카드는 풀린다
  *   앱 전체가 쓰는 장착 캐릭터도 바로 바꿔서, 다른 화면 다람쥐가 새 옷으로 보인다
- * - 카드 그림: code가 있으면 FE에 넣어 둔 그 옷의 인사 자세, 없으면 서버 imageUrl, 그것도 없으면 자리 표시
+ * - 카드 그림: FE에 그 옷(code) 그림이 있으면 인사 자세, 없으면 서버 imageUrl, 그것도 없으면 자리 표시
  * Figma 975 → 390 (÷2.5)
  */
 import clsx from 'clsx'
@@ -24,7 +24,7 @@ import {
 import { getMe } from '@/api/user'
 import { Button, LoadError, Loading } from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
-import { getCharacterImage } from '@/constants/characters'
+import { getCharacterImage, hasCharacterImage } from '@/constants/characters'
 import { useApi } from '@/hooks/useApi'
 import { setEquippedCharacterCode } from '@/hooks/useEquippedCharacter'
 import { ROUTES } from '@/router/routes'
@@ -168,7 +168,7 @@ export default function CharacterShopPage() {
       <ul className="mt-gap grid grid-cols-2 gap-x-3 gap-y-6">
         {characters.map((character) => {
           const { characterId: id, code, name, imageUrl, price, owned, equipped } = character
-          const image = code ? getCharacterImage(code, 'wave') : imageUrl
+          const image = hasCharacterImage(code) ? getCharacterImage(code, 'wave') : imageUrl
           const state: CardState = equipped ? 'equipped' : id === selectedId ? 'selected' : 'normal'
           const style = CARD_STYLE[state]
           return (

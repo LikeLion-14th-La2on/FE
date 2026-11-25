@@ -24,6 +24,7 @@ import { toSector } from '@/api/types'
 import {
   BottomSheet,
   Button,
+  Character,
   LoadError,
   Loading,
   PeekSquirrel,
@@ -220,12 +221,11 @@ export default function LevelTestPage() {
         건너뛰기 · 모든 섹터 1단계부터 시작
       </button>
 
-      <BottomSheet
-        open={exitOpen}
-        onClose={() => setExitOpen(false)}
-        labelledBy="level-exit-title"
-        peek
-      >
+      <BottomSheet open={exitOpen} onClose={() => setExitOpen(false)} labelledBy="level-exit-title">
+        {/* 그만두려는 순간이라 우는 다람쥐 */}
+        <div className="flex justify-center">
+          <Character width={88} pose="sad" />
+        </div>
         <h2 id="level-exit-title" className="text-[20px] leading-[1.4] font-black text-herb">
           레벨 테스트를 그만둘까요?
         </h2>
