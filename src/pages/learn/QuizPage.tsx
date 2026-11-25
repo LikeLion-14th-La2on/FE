@@ -286,6 +286,7 @@ function QuizRun({ session, sector, stage }: { session: Session; sector: Sector;
             nextLabel={nextLabel}
             onNext={next}
             onTutor={saveForTutor}
+            questionId={q.questionId}
           />
         ) : (
           <div className="flex flex-col gap-2">

@@ -36,13 +36,24 @@ function subscribe(fn: () => void) {
   return () => listeners.delete(fn)
 }
 
+/** 비운 뒤 늦게 도착한 이전 계정의 응답은 버린다 */
+let generation = 0
+
 export function loadBookmarks() {
   if (state.status === 'loading') return
   set({ status: 'loading' })
+  const current = generation
   getBookmarks().then(
-    (items) => set({ status: 'ready', items }),
-    () => set({ status: 'error' }),
+    (items) => current === generation && set({ status: 'ready', items }),
+    () => current === generation && set({ status: 'error' }),
   )
+}
+
+/** 로그아웃 · 탈퇴할 때 비운다. 다음에 단어장을 쓰는 화면에서 새로 불러온다 */
+export function resetBookmarks() {
+  generation += 1
+  window.clearTimeout(errorTimer)
+  set({ status: 'idle', items: [], error: null })
 }
 
 const SAVE_ERROR = '저장하지 못했어요. 잠시 후 다시 시도해 주세요'
@@ -60,12 +71,14 @@ export function toggleBookmark(term: TermSummary, on: boolean) {
   } else {
     set({ error: null })
   }
+  const current = generation
   ;(on ? removeBookmark : addBookmark)(term.termId).then(
     () => {
       // 목록을 아직 못 받은 상태였다면 저장 결과까지 담아 다시 받는다
-      if (!wasReady) loadBookmarks()
+      if (!wasReady && current === generation) loadBookmarks()
     },
     () => {
+      if (current !== generation) return
       set({ ...(wasReady ? { items: before } : {}), error: SAVE_ERROR })
       window.clearTimeout(errorTimer)
       errorTimer = window.setTimeout(() => set({ error: null }), ERROR_SHOW_MS)

@@ -30,6 +30,7 @@ import { SECTORS, type Sector } from '@/constants/sectors'
 import { useApi } from '@/hooks/useApi'
 import { resetEquippedCharacter, useEquippedCharacterCode } from '@/hooks/useEquippedCharacter'
 import { ROUTES } from '@/router/routes'
+import { clearUserDeviceData } from '@/utils/clearUserDeviceData'
 
 /**
  * 내 정보 + 학습 현황 + 홈을 한 번에
@@ -40,11 +41,8 @@ const loadMyPage = async (signal: AbortSignal) => {
   return { me, stats, home }
 }
 
-/**
- * 닉네임 수정 버튼을 보여 줄지
- * TODO: 닉네임 수정 API(PATCH /users/me/nickname)가 실서버에 나오면 true로 (시트 · API 연결은 이미 되어 있음)
- */
-const NICKNAME_EDIT_ENABLED = false
+/** 닉네임 수정 버튼을 보여 줄지 */
+const NICKNAME_EDIT_ENABLED = true
 
 /** 스트릭 보호권: 도토리 5개에 1개, 최대 2개까지 가질 수 있다 */
 const SHIELD_PRICE = 5
@@ -482,7 +480,7 @@ function AccountSheet({ onClose }: { onClose: () => void }) {
   const [leaving, setLeaving] = useState(false)
   const [withdrawError, setWithdrawError] = useState<string | null>(null)
 
-  /** 저장된 토큰을 지우고 로그인 화면으로 (뒤로 가기로 돌아오지 못하게 replace) */
+  /** 저장된 토큰 · 이 기기의 사용자별 값을 지우고 로그인 화면으로 (뒤로 가기로 돌아오지 못하게 replace) */
   const leave = () => {
     try {
       localStorage.removeItem('accessToken')
@@ -492,6 +490,7 @@ function AccountSheet({ onClose }: { onClose: () => void }) {
     }
     // 다른 계정으로 로그인할 수 있으니 장착 캐릭터도 비운다
     resetEquippedCharacter()
+    clearUserDeviceData()
     navigate(ROUTES.login, { replace: true })
   }
 
