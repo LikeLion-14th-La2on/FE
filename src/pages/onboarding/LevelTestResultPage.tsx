@@ -13,6 +13,7 @@ import { toSector } from '@/api/types'
 import { Button, Character, PageHeader } from '@/components/common'
 import { SECTORS, type Sector } from '@/constants/sectors'
 import { CIRCLED } from '@/pages/learn/quiz/answer'
+import ReportQuestion from '@/pages/learn/quiz/ReportQuestion'
 import { ROUTES } from '@/router/routes'
 
 import type { LevelItem } from './LevelTestPage'
@@ -125,6 +126,7 @@ export default function LevelTestResultPage() {
                     {!e.correct && ` · 내 답 ${answerText(mine, q.choices)}`} · {e.explanation}
                   </p>
                 )}
+                <ReportQuestion questionId={q.questionId} />
               </li>
             )
           })}
