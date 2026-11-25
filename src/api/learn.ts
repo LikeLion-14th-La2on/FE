@@ -73,6 +73,16 @@ export const submitAnswer = (questionId: number, answer: AnswerValue, mode: Answ
     body: { answer, mode },
   })
 
+/** 신고 내용 최대 글자 수 (서버 검사와 같음) */
+export const REPORT_MAX_LENGTH = 300
+
+/**
+ * 문제 오타 · 오류 신고 (학습 · 레벨 테스트 · 카드뉴스 · 오답노트 문제 공통)
+ * - 같은 문제를 여러 번 신고해도 된다. 내용이 비었거나 300자를 넘으면 E400, 없는 문제면 E404
+ */
+export const reportQuestion = (questionId: number, content: string) =>
+  api<null>(`/api/v1/questions/${questionId}/reports`, { method: 'POST', body: { content } })
+
 /** 5문제 + 재출제를 마치면 호출. correctCount는 첫 풀이에서 맞힌 수 */
 export const completeStage = (stageId: number, correctCount: number) =>
   api<StageCompleteResult>(`/api/v1/stages/${stageId}/complete`, {

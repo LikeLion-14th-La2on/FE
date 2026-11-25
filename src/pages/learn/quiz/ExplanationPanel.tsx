@@ -11,6 +11,8 @@ import { Link } from 'react-router'
 import { BottomSheet, Button, PeekSquirrel } from '@/components/common'
 import { ROUTES } from '@/router/routes'
 
+import ReportQuestion from './ReportQuestion'
+
 export type TutorTerm = { termId: number; name: string; easyExplanation?: string }
 
 type Props = {
@@ -27,6 +29,8 @@ type Props = {
   onNext: () => void
   /** AI 튜터로 넘어가기 직전 (돌아왔을 때 이어서 풀 수 있게 저장) */
   onTutor?: () => void
+  /** 있으면 '문제 신고' 버튼을 보여 준다 */
+  questionId?: number
 }
 
 export default function ExplanationPanel({
@@ -40,6 +44,7 @@ export default function ExplanationPanel({
   nextLabel,
   onNext,
   onTutor,
+  questionId,
 }: Props) {
   const [pickOpen, setPickOpen] = useState(false)
 
@@ -91,6 +96,7 @@ export default function ExplanationPanel({
         <p className="text-[12px] leading-[1.4] font-medium text-burnt-orange-600">{note}</p>
       )}
       <Button onClick={onNext}>{nextLabel}</Button>
+      {questionId !== undefined && <ReportQuestion questionId={questionId} />}
 
       <BottomSheet
         open={pickOpen}

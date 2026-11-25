@@ -23,6 +23,7 @@ import { SECTOR_TEXT } from '@/constants/sectorText'
 import { SECTORS, type Sector } from '@/constants/sectors'
 import { useApi } from '@/hooks/useApi'
 import { CIRCLED, SITUATION_PROMPT } from '@/pages/learn/quiz/answer'
+import ReportQuestion from '@/pages/learn/quiz/ReportQuestion'
 
 type Filter = 'all' | Sector
 
@@ -300,6 +301,7 @@ export default function WrongNotePage() {
                 출처 · {open.reference}
               </p>
             )}
+            <ReportQuestion questionId={open.questionId} />
             <button
               type="button"
               onClick={() => setOpenId(null)}

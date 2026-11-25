@@ -29,6 +29,7 @@ import {
 } from '@/pages/learn/quiz/answer'
 import ChoiceAnswer from '@/pages/learn/quiz/ChoiceAnswer'
 import MatchingAnswer from '@/pages/learn/quiz/MatchingAnswer'
+import ReportQuestion from '@/pages/learn/quiz/ReportQuestion'
 import { ROUTES } from '@/router/routes'
 
 /** 이만큼(px) 이상 밀면 다음/이전 카드로 넘긴다 (용어 미리보기와 같음) */
@@ -250,6 +251,7 @@ export default function CardNewsReviewPage() {
               >
                 <p className="font-medium">{resultText(q, result)}</p>
                 {result.explanation && <p className="text-herb">{result.explanation}</p>}
+                <ReportQuestion questionId={q.questionId} />
               </div>
             )}
           </>
