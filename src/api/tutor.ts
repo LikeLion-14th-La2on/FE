@@ -44,6 +44,15 @@ export function loadFreeRemaining(): number {
   return TUTOR_FREE_PER_DAY
 }
 
+/** 로그아웃 · 탈퇴할 때 지운다 (다른 계정이 들어와도 남은 횟수가 섞이지 않게) */
+export function clearFreeRemaining() {
+  try {
+    localStorage.removeItem(FREE_KEY)
+  } catch {
+    // 저장소를 못 쓰면 지울 것도 없다
+  }
+}
+
 export function saveFreeRemaining(count: number) {
   try {
     localStorage.setItem(FREE_KEY, JSON.stringify({ date: todayKst(), count }))

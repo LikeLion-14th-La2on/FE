@@ -21,6 +21,7 @@ import { isValidNickname, NICKNAME_MAX_LENGTH, NICKNAME_RULE_TEXT } from '@/cons
 import { SECTORS, type Sector } from '@/constants/sectors'
 import { useApi } from '@/hooks/useApi'
 import { ROUTES } from '@/router/routes'
+import { clearUserDeviceData } from '@/utils/clearUserDeviceData'
 
 /**
  * 내 정보 + 학습 현황 + 홈을 한 번에
@@ -476,7 +477,7 @@ function AccountSheet({ onClose }: { onClose: () => void }) {
   const [leaving, setLeaving] = useState(false)
   const [withdrawError, setWithdrawError] = useState<string | null>(null)
 
-  /** 저장된 토큰을 지우고 로그인 화면으로 (뒤로 가기로 돌아오지 못하게 replace) */
+  /** 저장된 토큰 · 이 기기의 사용자별 값을 지우고 로그인 화면으로 (뒤로 가기로 돌아오지 못하게 replace) */
   const leave = () => {
     try {
       localStorage.removeItem('accessToken')
@@ -484,6 +485,7 @@ function AccountSheet({ onClose }: { onClose: () => void }) {
     } catch {
       // 저장소를 못 쓰는 환경이면 지울 것도 없다
     }
+    clearUserDeviceData()
     navigate(ROUTES.login, { replace: true })
   }
 

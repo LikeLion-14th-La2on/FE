@@ -36,3 +36,35 @@ export const submitNewsQuiz = (quizId: number, answer: string) =>
     method: 'POST',
     body: { answer },
   })
+
+/*
+ * 서버가 기록을 남기지 않아서, 다시 들어와도 결과가 보이게 푼 결과를 이 기기에 둔다 (퀴즈가 바뀌면 안 쓴다)
+ */
+export type SolvedNewsQuiz = { quizId: number; answer: string; result: NewsQuizResult }
+const SOLVED_KEY = 'news-quiz-solved'
+
+export function loadSolvedNewsQuiz(quizId: number): SolvedNewsQuiz | null {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SOLVED_KEY) ?? 'null') as SolvedNewsQuiz | null
+    return saved?.quizId === quizId ? saved : null
+  } catch {
+    return null
+  }
+}
+
+export function saveSolvedNewsQuiz(solved: SolvedNewsQuiz) {
+  try {
+    localStorage.setItem(SOLVED_KEY, JSON.stringify(solved))
+  } catch {
+    // 저장 못 해도 지금 화면에서는 결과가 보인다
+  }
+}
+
+/** 로그아웃 · 탈퇴할 때 지운다 (다른 계정이 들어와도 푼 결과가 보이지 않게) */
+export function clearSolvedNewsQuiz() {
+  try {
+    localStorage.removeItem(SOLVED_KEY)
+  } catch {
+    // 저장소를 못 쓰면 지울 것도 없다
+  }
+}

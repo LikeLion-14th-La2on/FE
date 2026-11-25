@@ -40,6 +40,17 @@ export function addRecentTerm({ termId, name, easyExplanation }: TermSummary) {
   listeners.forEach((fn) => fn())
 }
 
+/** 로그아웃 · 탈퇴할 때 비운다 (다른 계정으로 들어와도 남지 않게) */
+export function clearRecentTerms() {
+  recent = []
+  try {
+    localStorage.removeItem(KEY)
+  } catch {
+    // 저장소를 못 쓰면 지울 것도 없다
+  }
+  listeners.forEach((fn) => fn())
+}
+
 export function useRecentTerms(): TermSummary[] {
   return useSyncExternalStore(subscribe, () => recent)
 }
