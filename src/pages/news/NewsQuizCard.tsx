@@ -10,9 +10,11 @@ import { useState } from 'react'
 import { ApiError } from '@/api/client'
 import {
   getTodayNewsQuiz,
+  loadSolvedNewsQuiz,
+  saveSolvedNewsQuiz,
   submitNewsQuiz,
   type NewsQuiz,
-  type NewsQuizResult,
+  type SolvedNewsQuiz,
 } from '@/api/newsQuiz'
 import { LoadError } from '@/components/common'
 import { useApi } from '@/hooks/useApi'
@@ -24,27 +26,6 @@ import {
   withIeyo,
 } from '@/pages/learn/quiz/answer'
 import ChoiceAnswer from '@/pages/learn/quiz/ChoiceAnswer'
-
-/** 푼 결과 (퀴즈가 바뀌면 안 쓴다) */
-type Solved = { quizId: number; answer: string; result: NewsQuizResult }
-const SOLVED_KEY = 'news-quiz-solved'
-
-function loadSolved(quizId: number): Solved | null {
-  try {
-    const saved = JSON.parse(localStorage.getItem(SOLVED_KEY) ?? 'null') as Solved | null
-    return saved?.quizId === quizId ? saved : null
-  } catch {
-    return null
-  }
-}
-
-function saveSolved(solved: Solved) {
-  try {
-    localStorage.setItem(SOLVED_KEY, JSON.stringify(solved))
-  } catch {
-    // 저장 못 해도 지금 화면에서는 결과가 보인다
-  }
-}
 
 /** 2026-11-23 → 11월 23일 */
 function dateLabel(date: string) {
@@ -81,7 +62,7 @@ export default function NewsQuizCard() {
 
 function QuizBody({ quiz }: { quiz: NewsQuiz }) {
   const q = quiz.question
-  const [solved, setSolved] = useState<Solved | null>(() => loadSolved(quiz.quizId))
+  const [solved, setSolved] = useState<SolvedNewsQuiz | null>(() => loadSolvedNewsQuiz(quiz.quizId))
   const [picked, setPicked] = useState<string | null>(solved?.answer ?? null)
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
@@ -95,7 +76,7 @@ function QuizBody({ quiz }: { quiz: NewsQuiz }) {
     submitNewsQuiz(quiz.quizId, answer).then(
       (res) => {
         const next = { quizId: quiz.quizId, answer, result: res }
-        saveSolved(next)
+        saveSolvedNewsQuiz(next)
         setSolved(next)
         setSending(false)
       },
