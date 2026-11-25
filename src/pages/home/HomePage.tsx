@@ -20,7 +20,7 @@ import treeSummer from '@/assets/tree/tree-summer.svg'
 import treeWinter from '@/assets/tree/tree-winter.svg'
 import { getHome, type Home } from '@/api/home'
 import { toSector } from '@/api/types'
-import { Card, LoadError, Loading } from '@/components/common'
+import { Card, Character, LoadError, Loading } from '@/components/common'
 import { SECTORS, type Sector } from '@/constants/sectors'
 import { useApi } from '@/hooks/useApi'
 import { ROUTES } from '@/router/routes'
@@ -180,6 +180,9 @@ function HomeView({ home }: { home: Home }) {
         </div>
       </header>
 
+      {/* 연속 학습이 끊겨 도토리가 떨어진 날 (서버가 같은 끊김으로는 한 번만 acornFell: true) */}
+      {tree.acornFell && <StreakBreakNotice />}
+
       {/* 오늘의 나무 */}
       <Card className="relative rounded-[24px] p-0 pt-5 pb-5">
         <p className="absolute top-[19px] right-[19px] flex items-center gap-1 text-[15px] font-medium text-apricot-700">
@@ -257,6 +260,26 @@ function HomeView({ home }: { home: Home }) {
         </button>
       )}
     </div>
+  )
+}
+
+/** 연속 학습 끊김 알림: 우는 다람쥐 + 안내 (보호권이 있으면 쉰 날을 대신 지켜준다는 것도 같이) */
+function StreakBreakNotice() {
+  return (
+    <section
+      role="status"
+      className="flex items-center gap-3 rounded-card bg-burnt-orange-100 py-3 pr-4 pl-3"
+    >
+      <Character width={56} pose="sad" />
+      <div className="min-w-0">
+        <p className="text-[15px] leading-[1.4] font-bold text-burnt-orange-700">
+          연속 학습이 끊겼어요
+        </p>
+        <p className="text-sub break-keep text-burnt-orange-600">
+          나무에서 도토리 1개가 떨어졌어요. 스트릭 보호권이 있으면 쉰 날을 대신 지켜줘요.
+        </p>
+      </div>
+    </section>
   )
 }
 

@@ -3,6 +3,11 @@ import { api } from './client'
 
 export type CharacterItem = {
   characterId: number
+  /**
+   * 그림 폴더 이름 (예: 'basic', 'rich') → src/assets/characters/{code}/
+   * TODO: 백엔드 추가 요청 중 — 오기 전엔 없어서 기본 다람쥐로 보인다
+   */
+  code?: string
   name: string
   imageUrl: string | null
   /** 도토리 가격 (기본 캐릭터는 0) */

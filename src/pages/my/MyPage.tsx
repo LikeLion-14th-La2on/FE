@@ -15,11 +15,20 @@ import { getHome } from '@/api/home'
 import { buyShield } from '@/api/streak'
 import { toSector } from '@/api/types'
 import { checkNickname, getMe, getStats, updateNickname, withdraw } from '@/api/user'
-import { BottomSheet, Button, LoadError, Loading, ProgressBar } from '@/components/common'
+import {
+  BottomSheet,
+  Button,
+  Character,
+  LoadError,
+  Loading,
+  ProgressBar,
+} from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
+import { getCharacterImage, hasCharacterImage } from '@/constants/characters'
 import { isValidNickname, NICKNAME_MAX_LENGTH, NICKNAME_RULE_TEXT } from '@/constants/nickname'
 import { SECTORS, type Sector } from '@/constants/sectors'
 import { useApi } from '@/hooks/useApi'
+import { resetEquippedCharacter, useEquippedCharacterCode } from '@/hooks/useEquippedCharacter'
 import { ROUTES } from '@/router/routes'
 import { clearUserDeviceData } from '@/utils/clearUserDeviceData'
 
@@ -53,6 +62,7 @@ const BAR_COLOR: Record<Sector, { track: string; fill: string }> = {
 export default function MyPage() {
   const navigate = useNavigate()
   const page = useApi(loadMyPage, 'my-page')
+  const equippedCode = useEquippedCharacterCode()
   /** 이 화면에서 닉네임을 고친 경우에만 값이 있다 (없으면 서버 값) */
   const [editedNickname, setEditedNickname] = useState<string | null>(null)
   /** 보호권을 산 뒤의 값 (사기 전엔 null → 서버 값 · 목업) */
@@ -77,6 +87,10 @@ export default function MyPage() {
 
   const { me, stats, home } = page.data
   const nickname = editedNickname ?? me.nickname ?? ''
+  // 프로필 그림: FE 옷 그림 → 서버 장착 캐릭터 그림 → 기본 다람쥐
+  const profileImage = hasCharacterImage(equippedCode)
+    ? getCharacterImage(equippedCode, 'wave')
+    : (me.characterImageUrl ?? getCharacterImage(null, 'wave'))
   // 처음엔 홈 응답 값, 보호권을 산 뒤에는 구매 응답 값 (홈을 다시 부르지 않는다)
   const acornBalance = bought?.acornBalance ?? home.acornBalance
   const shieldCount = bought?.shieldCount ?? home.streak.shieldCount
@@ -124,20 +138,12 @@ export default function MyPage() {
 
       {/* 프로필 */}
       <section className="mt-[18px] flex h-24 items-center gap-4 rounded-card bg-apricot-600 px-4 shadow-[0_4px_12px_rgb(0_0_0/0.05)]">
-        {me.characterImageUrl ? (
-          <img
-            src={me.characterImageUrl}
-            alt="장착한 캐릭터"
-            className="size-16 shrink-0 rounded-full bg-coconut-100 object-contain"
-          />
-        ) : (
-          // 장착한 캐릭터 이미지가 없을 때 디자인의 자리 표시
-          <div className="flex size-16 shrink-0 items-center justify-center rounded-full border border-dashed border-[#8aa39e] bg-[#dce5e2] text-center text-[9px] leading-tight text-[#5f7a75]">
-            다람쥐
-            <br />
-            캐릭터
-          </div>
-        )}
+        {/* 장착한 옷의 인사 자세 (FE 그림이 없으면 서버 그림 → 기본 다람쥐) */}
+        <img
+          src={profileImage}
+          alt="장착한 캐릭터"
+          className="size-16 shrink-0 rounded-full bg-coconut-100 object-contain p-1"
+        />
         <div>
           <p className="text-[20px] leading-[1.4] font-bold text-coconut-100">{nickname}</p>
           {NICKNAME_EDIT_ENABLED && (
@@ -482,6 +488,8 @@ function AccountSheet({ onClose }: { onClose: () => void }) {
     } catch {
       // 저장소를 못 쓰는 환경이면 지울 것도 없다
     }
+    // 다른 계정으로 로그인할 수 있으니 장착 캐릭터도 비운다
+    resetEquippedCharacter()
     clearUserDeviceData()
     navigate(ROUTES.login, { replace: true })
   }
@@ -552,6 +560,10 @@ function AccountSheet({ onClose }: { onClose: () => void }) {
 
       {step === 'withdraw' && (
         <>
+          {/* 떠나려는 순간이라 우는 다람쥐 */}
+          <div className="flex justify-center">
+            <Character width={88} pose="sad" />
+          </div>
           <h2 id="account-sheet-title" className="text-title text-herb">
             정말 탈퇴할까요?
           </h2>

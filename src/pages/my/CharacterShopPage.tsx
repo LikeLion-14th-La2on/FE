@@ -6,6 +6,8 @@
  * - 캐릭터 목록(GET /characters)과 보유 도토리(GET /users/me)를 함께 불러온다
  * - 구매(POST /characters/{id}/purchase): 성공하면 보유로 바뀌고 도토리가 줄어든다 (다시 불러오지 않고 응답으로 갱신)
  * - 장착(PATCH /users/me/character): 성공하면 그 카드가 '장착중'이 되고 고른 카드는 풀린다
+ *   앱 전체가 쓰는 장착 캐릭터도 바로 바꿔서, 다른 화면 다람쥐가 새 옷으로 보인다
+ * - 카드 그림: FE에 그 옷(code) 그림이 있으면 인사 자세, 없으면 서버 imageUrl, 그것도 없으면 자리 표시
  * Figma 975 → 390 (÷2.5)
  */
 import clsx from 'clsx'
@@ -22,7 +24,9 @@ import {
 import { getMe } from '@/api/user'
 import { Button, LoadError, Loading } from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
+import { getCharacterImage, hasCharacterImage } from '@/constants/characters'
 import { useApi } from '@/hooks/useApi'
+import { setEquippedCharacterCode } from '@/hooks/useEquippedCharacter'
 import { ROUTES } from '@/router/routes'
 
 /** 캐릭터 목록 + 보유 도토리를 한 번에 */
@@ -112,6 +116,9 @@ export default function CharacterShopPage() {
     equipCharacter(id)
       .then(({ equippedCharacterId }) => {
         setEquippedId(equippedCharacterId)
+        // 홈 · 마이페이지 · 학습 화면 다람쥐도 새 옷으로
+        const equipped = characters.find((c) => c.characterId === equippedCharacterId)
+        setEquippedCharacterCode(equipped?.code ?? null)
         // 장착중 카드는 고를 수 없어서, 고른 상태를 풀고 하단 버튼을 숨긴다
         setSelectedId(null)
       })
@@ -160,7 +167,8 @@ export default function CharacterShopPage() {
       {/* 캐릭터 카드 */}
       <ul className="mt-gap grid grid-cols-2 gap-x-3 gap-y-6">
         {characters.map((character) => {
-          const { characterId: id, name, imageUrl, price, owned, equipped } = character
+          const { characterId: id, code, name, imageUrl, price, owned, equipped } = character
+          const image = hasCharacterImage(code) ? getCharacterImage(code, 'wave') : imageUrl
           const state: CardState = equipped ? 'equipped' : id === selectedId ? 'selected' : 'normal'
           const style = CARD_STYLE[state]
           return (
@@ -185,8 +193,8 @@ export default function CharacterShopPage() {
                     style.image,
                   )}
                 >
-                  {imageUrl ? (
-                    <img src={imageUrl} alt="" className="h-[88px] w-auto object-contain" />
+                  {image ? (
+                    <img src={image} alt="" className="h-[88px] w-auto object-contain" />
                   ) : (
                     // 이미지가 없는 캐릭터는 디자인의 자리 표시
                     <span className="flex size-[84px] items-center justify-center rounded-full border border-dashed border-[#8aa39e] bg-[#dce5e2] text-center text-[10px] leading-[1.15] text-[#5f7a75]">
