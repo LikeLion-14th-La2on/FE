@@ -19,7 +19,9 @@ import { BottomSheet, Button, LoadError, Loading, ProgressBar } from '@/componen
 import BackIcon from '@/components/icons/BackIcon'
 import { isValidNickname, NICKNAME_MAX_LENGTH, NICKNAME_RULE_TEXT } from '@/constants/nickname'
 import { SECTORS, type Sector } from '@/constants/sectors'
+import { getCharacterImage } from '@/constants/characters'
 import { useApi } from '@/hooks/useApi'
+import { resetEquippedCharacter, useEquippedCharacterCode } from '@/hooks/useEquippedCharacter'
 import { ROUTES } from '@/router/routes'
 
 /**
@@ -55,6 +57,7 @@ const BAR_COLOR: Record<Sector, { track: string; fill: string }> = {
 export default function MyPage() {
   const navigate = useNavigate()
   const page = useApi(loadMyPage, 'my-page')
+  const equippedCode = useEquippedCharacterCode()
   /** 이 화면에서 닉네임을 고친 경우에만 값이 있다 (없으면 서버 값) */
   const [editedNickname, setEditedNickname] = useState<string | null>(null)
   /** 보호권을 산 뒤의 값 (사기 전엔 null → 서버 값 · 목업) */
@@ -126,20 +129,12 @@ export default function MyPage() {
 
       {/* 프로필 */}
       <section className="mt-[18px] flex h-24 items-center gap-4 rounded-card bg-apricot-600 px-4 shadow-[0_4px_12px_rgb(0_0_0/0.05)]">
-        {me.characterImageUrl ? (
-          <img
-            src={me.characterImageUrl}
-            alt="장착한 캐릭터"
-            className="size-16 shrink-0 rounded-full bg-coconut-100 object-contain"
-          />
-        ) : (
-          // 장착한 캐릭터 이미지가 없을 때 디자인의 자리 표시
-          <div className="flex size-16 shrink-0 items-center justify-center rounded-full border border-dashed border-[#8aa39e] bg-[#dce5e2] text-center text-[9px] leading-tight text-[#5f7a75]">
-            다람쥐
-            <br />
-            캐릭터
-          </div>
-        )}
+        {/* 장착한 옷의 인사 자세 (옷 그림이 없으면 기본 다람쥐) */}
+        <img
+          src={getCharacterImage(equippedCode, 'wave')}
+          alt="장착한 캐릭터"
+          className="size-16 shrink-0 rounded-full bg-coconut-100 object-contain p-1"
+        />
         <div>
           <p className="text-[20px] leading-[1.4] font-bold text-coconut-100">{nickname}</p>
           {NICKNAME_EDIT_ENABLED && (
@@ -484,6 +479,8 @@ function AccountSheet({ onClose }: { onClose: () => void }) {
     } catch {
       // 저장소를 못 쓰는 환경이면 지울 것도 없다
     }
+    // 다른 계정으로 로그인할 수 있으니 장착 캐릭터도 비운다
+    resetEquippedCharacter()
     navigate(ROUTES.login, { replace: true })
   }
 
