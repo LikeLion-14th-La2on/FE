@@ -2,6 +2,7 @@
  * 백엔드 API 공통 호출 (`/api/v1/...`)
  * - 로그인 토큰(localStorage accessToken)을 Authorization 헤더에 붙인다.
  * - 응답 `{ code, message, data }`에서 data만 돌려준다. 실패하면 ApiError(서버 message 그대로)를 던진다.
+ *   성공 응답이어도 이 모양이 아니면 ApiError(INVALID_RESPONSE)를 던진다.
  * - 토큰이 만료돼 401이 오면 refreshToken으로 한 번 재발급받아 다시 요청한다.
  *   재발급도 실패하면 토큰을 지우고 로그인 화면으로 보낸다.
  */
@@ -95,5 +96,15 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
   if (!res.ok) {
     throw new ApiError(json?.message ?? DEFAULT_MESSAGE, json?.code ?? `E${res.status}`, res.status)
   }
-  return json?.data as T
+  // 성공인데 { code, message, data } 모양이 아니면(프록시 설정이 틀려 index.html이 온 경우 등) 실패로 본다.
+  // 그대로 돌려주면 화면이 undefined를 받아 오류 화면도 없이 깨진다. data: null은 정상 응답이다.
+  if (!isEnvelope(json)) {
+    if (options.signal?.aborted) throw new DOMException('요청이 취소됐어요', 'AbortError')
+    throw new ApiError(DEFAULT_MESSAGE, 'INVALID_RESPONSE', res.status)
+  }
+  return json.data as T
+}
+
+function isEnvelope(json: unknown): json is { data: unknown } {
+  return typeof json === 'object' && json !== null && 'data' in json
 }
