@@ -44,6 +44,13 @@ export type StageCompleteResult = {
   streak: number
   tree: { filledCount: number; totalCount: number; fallenCount: number }
   treeCompleted: boolean
+  /**
+   * 내 숲 나무 수 (나무를 완성한 날이면 이번에 수확한 나무가 몇 번째인지)
+   * 백엔드 추가 예정 — 오기 전엔 없으니 수확 화면이 기본값을 쓴다
+   */
+  treeCount?: number
+  /** 나무 완성 보너스 도토리 (서버 현재 값 5). 백엔드 추가 예정 */
+  treeBonus?: number
   newTermCount: number
   cardReviewCount: number
   nextStageId: number | null

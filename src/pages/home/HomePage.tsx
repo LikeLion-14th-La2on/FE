@@ -1,5 +1,8 @@
 /**
  * 홈: 인사 + 연속 학습·도토리·보호권 칩 / 오늘의 나무(도토리 n/7) / 오늘의 섹터 / 이번 주 연속 학습 / 오답 복습
+ * - 모든 값은 홈 API(GET /api/v1/home)에서 받는다
+ * - 연속 학습 끊김은 서버가 홈 조회 때 판정해서, 처리 후 값만 내려준다 (FE는 계산하지 않는다)
+ *   빠진 날 수만큼 보호권이 있으면 자동으로 쓰고 연속 유지, 모자라면 쓰지 않고 연속 0 · 도토리 1개 떨어짐
  * Figma 975 → 390 (÷2.5)
  */
 import clsx from 'clsx'
@@ -15,34 +18,12 @@ import treeAutumn from '@/assets/tree/tree-autumn.svg'
 import treeSpring from '@/assets/tree/tree-spring.svg'
 import treeSummer from '@/assets/tree/tree-summer.svg'
 import treeWinter from '@/assets/tree/tree-winter.svg'
-import { Card } from '@/components/common'
-import { getSectorOfDay, SECTORS, type Sector } from '@/constants/sectors'
+import { getHome, type Home } from '@/api/home'
+import { toSector } from '@/api/types'
+import { Card, LoadError, Loading } from '@/components/common'
+import { SECTORS, type Sector } from '@/constants/sectors'
+import { useApi } from '@/hooks/useApi'
 import { ROUTES } from '@/router/routes'
-
-/**
- * TODO: 홈 API(GET /api/v1/home) 연결 후 실제 값으로 교체
- * 연속 학습 끊김은 서버가 홈 조회 때 판정해서, 처리 후 값만 내려준다 (FE는 계산하지 않는다)
- * - 빠진 날 수만큼 보호권이 있으면 자동으로 쓰고 연속 유지, 모자라면 쓰지 않고 연속 0 · 도토리 1개 떨어짐
- */
-const MOCK = {
-  nickname: 'OO',
-  streak: {
-    currentCount: 5, // 처리 후 연속 학습일 (끊겼으면 0)
-    shieldCount: 1, // 처리 후 남은 보호권 수
-  },
-  acornBalance: 30, // 처리 후 도토리 잔액
-  tree: {
-    acornCount: 4, // 처리 후 나무에 붙어 있는 도토리 (7개가 되면 숲으로)
-    fallenCount: 1, // 지금 나무에서 떨어진 도토리 누적 수 (바닥에 놓인다)
-    acornFell: true, // 이번 홈 조회에서 실제로 떨어졌으면 true (같은 끊김으로는 한 번만)
-  },
-  forestCount: 2,
-  // 일요일(복습하는 날)에는 둘 다 null
-  todaySector: getSectorOfDay(),
-  nextStage: getSectorOfDay() ? 2 : null,
-  week: [true, true, true, true, true, false, false], // 월~일 학습 여부
-  wrongYesterday: 2,
-}
 
 const ACORNS_PER_TREE = 7
 
@@ -155,15 +136,27 @@ const SECTOR_CARD_BG: Record<Sector, string> = {
 const WEEK_DAYS = ['월', '화', '수', '목', '금', '토', '일']
 
 export default function HomePage() {
+  const home = useApi(getHome, 'home')
+
+  if (home.status === 'loading') return <Loading label="홈을 불러오고 있어요" />
+  if (home.status === 'error')
+    return <LoadError message={home.error.message} onRetry={home.reload} />
+  return <HomeView home={home.data} />
+}
+
+function HomeView({ home }: { home: Home }) {
   const navigate = useNavigate()
+  const { streak, tree } = home
   // 나무 하나에 최대 7개: 서버 값이 7을 넘거나 음수여도 0~7 사이로 맞춘다
-  const acornCount = Math.min(Math.max(MOCK.tree.acornCount, 0), ACORNS_PER_TREE)
+  const acornCount = Math.min(Math.max(tree.acornCount, 0), ACORNS_PER_TREE)
   // 바닥 자리도 7곳이라 그 이상은 그리지 않는다
-  const fallenCount = Math.min(Math.max(MOCK.tree.fallenCount, 0), GROUND_SPOTS.length)
-  const acornLayout = useMemo(() => getTreeAcornLayout(MOCK.forestCount + 1), [])
+  const fallenCount = Math.min(Math.max(tree.fallenCount, 0), GROUND_SPOTS.length)
+  // 지금 키우는 나무 = 숲에 모은 나무 수 + 1번째
+  const acornLayout = useMemo(() => getTreeAcornLayout(tree.treeCount + 1), [tree.treeCount])
+  const todaySector = home.todaySector ? toSector(home.todaySector.name) : null
   // 이번에 떨어진 도토리는 남은 도토리 바로 다음 자리(가장 최근에 붙었던 자리)에서 떨어진다
   const fellFrom =
-    MOCK.tree.acornFell && fallenCount > 0 && acornCount < ACORNS_PER_TREE
+    tree.acornFell && fallenCount > 0 && acornCount < ACORNS_PER_TREE
       ? acornLayout[acornCount]
       : null
 
@@ -172,17 +165,17 @@ export default function HomePage() {
       {/* 인사 + 칩 */}
       <header className="flex items-center justify-between">
         <h1 className="min-w-0 truncate text-title text-avocado-500">
-          {MOCK.nickname}님, 반가워요
+          {home.nickname ?? ''}님, 반가워요
         </h1>
         <div className="flex shrink-0 gap-[6px]">
           <Chip className="bg-apricot-200 text-apricot-700" icon="🔥" label="연속 학습">
-            {MOCK.streak.currentCount}
+            {streak.currentCount}
           </Chip>
           <Chip className="bg-avocado-200 text-avocado-500" icon="🌰" label="도토리">
-            {MOCK.acornBalance}
+            {home.acornBalance}
           </Chip>
           <Chip className="bg-herb-100 text-herb-400" icon="🛡️" label="보호권">
-            {MOCK.streak.shieldCount}
+            {streak.shieldCount}
           </Chip>
         </div>
       </header>
@@ -218,13 +211,13 @@ export default function HomePage() {
           onClick={() => navigate(ROUTES.forest)}
           className="mx-auto mt-8 flex items-center gap-1 text-sub font-bold text-avocado-500"
         >
-          <span aria-hidden>🌳</span>내 숲 {MOCK.forestCount}그루 ›
+          <span aria-hidden>🌳</span>내 숲 {tree.treeCount}그루 ›
         </button>
       </Card>
 
       {/* 오늘의 섹터 (일요일은 복습하는 날) */}
-      {MOCK.todaySector && MOCK.nextStage ? (
-        <TodaySectorCard sector={MOCK.todaySector} stage={MOCK.nextStage} />
+      {todaySector ? (
+        <TodaySectorCard sector={todaySector} stage={home.nextStage?.stepNo ?? null} />
       ) : (
         <ReviewDayCard />
       )}
@@ -233,7 +226,7 @@ export default function HomePage() {
       <Card className="px-[18px] pt-5 pb-[18px] shadow-[0_4px_12px_rgb(0_0_0/0.05)]">
         <h2 className="flex items-center gap-1 text-[16px] font-bold text-herb">
           <span aria-hidden>🔥</span>
-          {MOCK.streak.currentCount}일 연속 학습 중
+          {streak.currentCount}일 연속 학습 중
         </h2>
         <ul className="mt-[14px] flex justify-between">
           {WEEK_DAYS.map((day, i) => (
@@ -241,10 +234,10 @@ export default function HomePage() {
               <span
                 className={clsx(
                   'flex size-[30px] items-center justify-center rounded-full text-[12px]',
-                  MOCK.week[i] ? 'bg-apricot-600' : 'bg-coconut-600',
+                  streak.weekStudied[i] ? 'bg-apricot-600' : 'bg-coconut-600',
                 )}
               >
-                {MOCK.week[i] && <span aria-label="학습함">🌰</span>}
+                {streak.weekStudied[i] && <span aria-label="학습함">🌰</span>}
               </span>
               <span className="text-tag font-medium text-herb-400">{day}</span>
             </li>
@@ -252,15 +245,15 @@ export default function HomePage() {
         </ul>
       </Card>
 
-      {/* 어제 틀린 문제 복습 */}
-      {MOCK.wrongYesterday > 0 && (
+      {/* 어제 틀린 문제 복습: 카드뉴스 복습 대기가 있을 때만, 다시 풀어보는 카드뉴스 복습으로 */}
+      {home.hasCardReview && home.yesterdayWrongCount > 0 && (
         <button
           type="button"
-          onClick={() => navigate(ROUTES.wrongNote)}
+          onClick={() => navigate(ROUTES.cardNewsReview)}
           className="flex h-12 items-center gap-1 rounded-[18px] bg-burnt-orange-500 px-[18px] text-card-title text-coconut-100 shadow-[0_6px_0_var(--color-burnt-orange-700)] transition-[transform,box-shadow] duration-75 active:translate-y-1.5 active:shadow-none"
         >
           <span aria-hidden>✏️</span>
-          어제 틀린 문제 {MOCK.wrongYesterday}개, 오늘은 맞혀볼까요? ›
+          어제 틀린 문제 {home.yesterdayWrongCount}개, 오늘은 맞혀볼까요? ›
         </button>
       )}
     </div>
@@ -367,8 +360,11 @@ function FallenAcorns({
 const START_BUTTON_CLASS =
   'h-10 w-[100px] rounded-[14px] bg-coconut-100 text-[14px] font-bold text-herb shadow-[0_4px_0_var(--color-coconut-600)] transition-[transform,box-shadow] duration-75 active:translate-y-1 active:shadow-none'
 
-/** 오늘의 섹터: 요일별 섹터의 다음 단계로 바로 학습 시작 */
-function TodaySectorCard({ sector, stage }: { sector: Sector; stage: number }) {
+/**
+ * 오늘의 섹터: 요일별 섹터의 다음 단계로 바로 학습 시작
+ * - stage가 null이면 오늘의 섹터 단계를 다 끝낸 것 (완주 표시, 버튼은 학습 화면으로)
+ */
+function TodaySectorCard({ sector, stage }: { sector: Sector; stage: number | null }) {
   const navigate = useNavigate()
   const { label, emoji } = SECTORS[sector]
 
@@ -383,7 +379,7 @@ function TodaySectorCard({ sector, stage }: { sector: Sector; stage: number }) {
         <p className="text-tag font-medium text-avocado-200">오늘의 섹터</p>
         <p className="flex items-center gap-1 text-[18px] font-bold text-coconut-100">
           <span aria-hidden>{emoji}</span>
-          {label} {stage}단계
+          {stage === null ? `${label} 완주!` : `${label} ${stage}단계`}
         </p>
       </div>
       <button
@@ -392,7 +388,7 @@ function TodaySectorCard({ sector, stage }: { sector: Sector; stage: number }) {
         onClick={() => navigate(ROUTES.learn, { state: { sector } })}
         className={START_BUTTON_CLASS}
       >
-        학습 시작 ▶
+        {stage === null ? '학습 보기 ▶' : '학습 시작 ▶'}
       </button>
     </section>
   )

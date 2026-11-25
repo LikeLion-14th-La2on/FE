@@ -5,8 +5,8 @@ import treeSummer from '@/assets/tree/tree-summer.svg'
 import treeWinter from '@/assets/tree/tree-winter.svg'
 
 export const ACORNS_PER_TREE = 7
-/** 수확 보너스: Figma 수확 화면의 "+20 도토리 획득" (TODO: 실제 지급액은 백엔드에 확인) */
-export const HARVEST_BONUS = 20
+/** 수확 보너스: 단계 완수 응답에 treeBonus가 아직 없을 때 쓰는 값 (서버 현재 값) */
+export const HARVEST_BONUS = 5
 
 export const SEASONS = {
   spring: { name: '봄', emoji: '🌸', image: treeSpring },
