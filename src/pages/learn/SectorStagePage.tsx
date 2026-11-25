@@ -1,24 +1,25 @@
 /**
  * 학습: 섹터 탭 3개 + 오늘의 섹터 표시 + 단계 길(완료 ✓ · 지금 ★ · 잠김 🔒 · 끝에 선물 🎁)
  * - 월~토: 오늘의 섹터 탭만 열려 있고, 다른 섹터 탭은 잠겨서 고를 수 없다
+ *   오늘 학습을 마치면(todayCompleted) 다른 섹터 탭도 열려서 추가로 풀 수 있다 (처음엔 오늘의 섹터 탭)
  * - 일요일(복습하는 날): 오늘의 섹터가 없어서 탭을 골라 아무 섹터나 학습한다
  *   (홈 '자유 학습'에서 넘겨받은 섹터가 있으면 그 탭이 먼저 열린다)
+ * - 오늘의 섹터는 섹터 목록(GET /api/v1/sectors)의 isToday, 단계 상태는 섹터별 단계 목록
+ *   (GET /api/v1/sectors/{sectorId}/stages)에서 받는다
+ *   완료 ✓ = COMPLETED · PASSED_BY_TEST / 지금 ★ = 첫 UNLOCKED / 나머지는 잠김
  * Figma 975 → 390 (÷2.5)
  */
 import clsx from 'clsx'
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 
+import { getSectors, getStages, type StageItem } from '@/api/learn'
+import { toSector } from '@/api/types'
+import { LoadError, Loading } from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
-import { getSectorOfDay, SECTORS, type Sector } from '@/constants/sectors'
+import { SECTORS, type Sector } from '@/constants/sectors'
+import { useApi } from '@/hooks/useApi'
 import { ROUTES } from '@/router/routes'
-
-// TODO: 학습 진행 API 연결 후 교체 (섹터별로 깬 단계 수 / 전체 단계 수)
-const MOCK_PROGRESS: Record<Sector, { cleared: number; total: number }> = {
-  stock: { cleared: 1, total: 3 },
-  life: { cleared: 0, total: 3 },
-  basic: { cleared: 2, total: 3 },
-}
 
 const SECTOR_ORDER: Sector[] = ['stock', 'life', 'basic']
 
@@ -48,49 +49,49 @@ const ZIGZAG = [17.5, -87.5, 0, 70]
 type NodeKind = 'done' | 'current' | 'locked' | 'gift'
 
 export default function SectorStagePage() {
-  const navigate = useNavigate()
-  const todaySector = getSectorOfDay()
+  const sectors = useApi(getSectors, 'sectors')
   const fromHome = (useLocation().state as { sector?: Sector } | null)?.sector
-  // 일요일에만 섹터를 직접 고를 수 있다
-  const canChooseSector = todaySector === null
-  const [chosenSector, setChosenSector] = useState<Sector>(fromHome ?? 'stock')
-  // 평일엔 넘겨받은 값과 상관없이 항상 오늘의 섹터
-  const sector = todaySector ?? chosenSector
+  /** 직접 고른 탭 (고르기 전엔 null → 오늘의 섹터, 일요일은 홈에서 넘겨받은 섹터 또는 주식) */
+  const [chosenSector, setChosenSector] = useState<Sector | null>(fromHome ?? null)
 
-  const { cleared, total } = MOCK_PROGRESS[sector]
-  const nextStage = cleared + 1
-  // 단계 1~total + 마지막에 선물
-  const nodes: { kind: NodeKind; stage: number }[] = [
-    ...Array.from({ length: total }, (_, i) => {
-      const stage = i + 1
-      const kind: NodeKind = stage <= cleared ? 'done' : stage === nextStage ? 'current' : 'locked'
-      return { kind, stage }
-    }),
-    { kind: 'gift', stage: total + 1 },
-  ]
+  if (sectors.status === 'loading')
+    return (
+      <>
+        <Header />
+        <Loading label="학습 단계를 불러오고 있어요" />
+      </>
+    )
+  if (sectors.status === 'error')
+    return (
+      <>
+        <Header />
+        <LoadError message={sectors.error.message} onRetry={sectors.reload} />
+      </>
+    )
 
-  const startStage = (stage: number) => navigate(ROUTES.termPreview(sector, stage))
+  // 서버 섹터 이름 → 화면 섹터 키
+  const sectorIds = new Map(sectors.data.sectors.map((s) => [toSector(s.name), s.sectorId]))
+  const today = sectors.data.sectors.find((s) => s.isToday)
+  const todaySector = today ? toSector(today.name) : null
+  // 일요일(오늘의 섹터 없음)이거나, 평일이라도 오늘 학습을 마쳤으면 섹터를 직접 고를 수 있다
+  const canChooseSector = todaySector === null || sectors.data.todayCompleted
+  // 고를 수 없으면 넘겨받은 값과 상관없이 항상 오늘의 섹터
+  const sector: Sector = canChooseSector
+    ? (chosenSector ?? todaySector ?? 'stock')
+    : (todaySector ?? 'stock')
+  const sectorId = sectorIds.get(sector)
 
   return (
     <>
-      <header className="flex items-center">
-        <button
-          type="button"
-          aria-label="뒤로 가기"
-          onClick={() => navigate(ROUTES.home)}
-          className="flex h-10 w-8 items-center text-herb"
-        >
-          <BackIcon className="w-[19px]" />
-        </button>
-        <h1 className="text-[18px] font-bold text-herb">학습</h1>
-      </header>
+      <Header />
 
       {/* 섹터 탭 (선택 안 된 탭만 입체 그림자) */}
       <div role="tablist" aria-label="섹터" className="mt-[18px] grid grid-cols-3 gap-2">
         {SECTOR_ORDER.map((key) => {
           const { label, emoji } = SECTORS[key]
           const selected = key === sector
-          const locked = !canChooseSector && !selected
+          // 서버에 없는 섹터도 고를 수 없게
+          const locked = (!canChooseSector && !selected) || !sectorIds.has(key)
           return (
             <button
               key={key}
@@ -128,24 +129,75 @@ export default function SectorStagePage() {
         {todaySector ? `오늘의 섹터 · ${SECTORS[todaySector].label}` : '오늘은 복습하는 날'}
       </p>
 
-      {/* 단계 길 */}
-      <ol className="-mt-[5px] flex flex-col">
-        {nodes.map(({ kind, stage }, i) => (
-          <li
-            key={stage}
-            className="flex h-[105px] items-center justify-center"
-            style={{ transform: `translateX(${ZIGZAG[i % ZIGZAG.length]}px)` }}
-          >
-            <StageNode
-              kind={kind}
-              stage={stage}
-              sector={sector}
-              onStart={() => startStage(stage)}
-            />
-          </li>
-        ))}
-      </ol>
+      {/* 단계 길 (섹터가 바뀌면 key로 새로 불러온다) */}
+      {sectorId === undefined ? (
+        <LoadError message="섹터를 찾을 수 없습니다" onRetry={sectors.reload} />
+      ) : (
+        <StagePath key={sectorId} sector={sector} sectorId={sectorId} />
+      )}
     </>
+  )
+}
+
+function Header() {
+  const navigate = useNavigate()
+  return (
+    <header className="flex items-center">
+      <button
+        type="button"
+        aria-label="뒤로 가기"
+        onClick={() => navigate(ROUTES.home)}
+        className="flex h-10 w-8 items-center text-herb"
+      >
+        <BackIcon className="w-[19px]" />
+      </button>
+      <h1 className="text-[18px] font-bold text-herb">학습</h1>
+    </header>
+  )
+}
+
+/** 서버 단계 상태 → 노드 모양: 완료(테스트 통과 포함) ✓ · 첫 번째 열린 단계 ★ · 나머지 🔒 */
+function toNodes(stages: StageItem[]): { kind: NodeKind; stage: number }[] {
+  const sorted = [...stages].sort((a, b) => a.stepNo - b.stepNo)
+  const current = sorted.find((s) => s.status === 'UNLOCKED')
+  const nodes = sorted.map(({ stepNo, status }) => {
+    const kind: NodeKind =
+      status === 'COMPLETED' || status === 'PASSED_BY_TEST'
+        ? 'done'
+        : stepNo === current?.stepNo
+          ? 'current'
+          : 'locked'
+    return { kind, stage: stepNo }
+  })
+  // 마지막에 선물
+  const last = sorted.at(-1)?.stepNo ?? 0
+  return [...nodes, { kind: 'gift', stage: last + 1 }]
+}
+
+/** 섹터 하나의 단계 길 */
+function StagePath({ sector, sectorId }: { sector: Sector; sectorId: number }) {
+  const navigate = useNavigate()
+  const stages = useApi((signal) => getStages(sectorId, signal), `stages:${sectorId}`)
+
+  if (stages.status === 'loading') return <Loading label="학습 단계를 불러오고 있어요" />
+  if (stages.status === 'error')
+    return <LoadError message={stages.error.message} onRetry={stages.reload} />
+
+  const nodes = toNodes(stages.data)
+  const startStage = (stage: number) => navigate(ROUTES.termPreview(sector, stage))
+
+  return (
+    <ol className="-mt-[5px] flex flex-col">
+      {nodes.map(({ kind, stage }, i) => (
+        <li
+          key={stage}
+          className="flex h-[105px] items-center justify-center"
+          style={{ transform: `translateX(${ZIGZAG[i % ZIGZAG.length]}px)` }}
+        >
+          <StageNode kind={kind} stage={stage} sector={sector} onStart={() => startStage(stage)} />
+        </li>
+      ))}
+    </ol>
   )
 }
 
