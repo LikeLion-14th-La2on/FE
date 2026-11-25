@@ -1,5 +1,6 @@
 /**
  * 내 숲: 완성한 나무(도토리 7개) 도감 (GET /api/v1/forest)
+ * - 지금 키우는 나무의 도토리 수는 홈 응답(GET /api/v1/home)의 tree.acornCount
  * - 위: 숲 풍경(최근 나무 몇 그루) + 지금 키우는 나무 진행도
  * - 아래: 완성한 나무 3열 도감 (최신순), 누르면 완성 날짜 · 떨어진 도토리 수 바텀시트
  * - 나무 그림은 FE가 정한다: 완성한 달의 계절 나무
@@ -12,29 +13,18 @@ import treeAutumn from '@/assets/tree/tree-autumn.svg'
 import treeSpring from '@/assets/tree/tree-spring.svg'
 import treeSummer from '@/assets/tree/tree-summer.svg'
 import treeWinter from '@/assets/tree/tree-winter.svg'
-import { BottomSheet, ProgressBar } from '@/components/common'
+import { getForest } from '@/api/forest'
+import { getHome } from '@/api/home'
+import { BottomSheet, LoadError, Loading, ProgressBar } from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
+import { useApi } from '@/hooks/useApi'
 import { ROUTES } from '@/router/routes'
 
-type Tree = {
-  treeId: number
-  /** 완성한 날짜 (한국 날짜, yyyy-MM-dd) */
-  completedAt: string
-  /** 이 나무를 키우는 동안 끊김으로 떨어진 도토리 수 */
-  fallenCount: number
+/** 완성한 나무 도감 + 지금 키우는 나무(홈 응답의 tree)를 한 번에 */
+const loadForest = async (signal: AbortSignal) => {
+  const [forest, home] = await Promise.all([getForest(signal), getHome(signal)])
+  return { forest, growingAcorns: home.tree.acornCount }
 }
-
-// TODO: 내 숲 API(GET /api/v1/forest) 연결 후 응답 data로 교체 (trees는 완성 최신순)
-const MOCK: { treeCount: number; trees: Tree[] } = {
-  treeCount: 3,
-  trees: [
-    { treeId: 3, completedAt: '2026-11-08', fallenCount: 0 },
-    { treeId: 2, completedAt: '2026-08-21', fallenCount: 2 },
-    { treeId: 1, completedAt: '2026-05-02', fallenCount: 1 },
-  ],
-}
-// TODO: 홈 응답의 tree.acornCount (지금 키우는 나무에 붙어 있는 도토리)
-const GROWING_ACORNS = 4
 
 const ACORNS_PER_TREE = 7
 /** 숲 풍경에 보여줄 최근 나무 수 */
@@ -55,30 +45,38 @@ function getSeasonTree(month: number) {
 }
 
 export default function ForestPage() {
-  const navigate = useNavigate()
-  const { treeCount, trees } = MOCK
+  const page = useApi(loadForest, 'forest')
   const [openId, setOpenId] = useState<number | null>(null)
+
+  if (page.status === 'loading')
+    return (
+      <>
+        <Header />
+        <Loading label="내 숲을 불러오고 있어요" />
+      </>
+    )
+  if (page.status === 'error')
+    return (
+      <>
+        <Header />
+        <LoadError message={page.error.message} onRetry={page.reload} />
+      </>
+    )
+
+  const { treeCount, trees } = page.data.forest
+  // 나무 하나에 최대 7개: 서버 값이 범위를 벗어나도 0~7 사이로 맞춘다
+  const growingAcorns = Math.min(Math.max(page.data.growingAcorns, 0), ACORNS_PER_TREE)
 
   // 최신순이라 맨 앞이 가장 최근: n번째 나무 = 전체 수 - 순서
   const numbered = trees.map((tree, i) => ({ ...tree, number: treeCount - i }))
   const opened = numbered.find(({ treeId }) => treeId === openId)
-  const acornsLeft = ACORNS_PER_TREE - GROWING_ACORNS
+  const acornsLeft = ACORNS_PER_TREE - growingAcorns
   // 풍경은 오래된 나무가 왼쪽에 오도록 뒤집는다
   const sceneTrees = numbered.slice(0, SCENE_MAX).reverse()
 
   return (
     <>
-      <header className="flex items-center">
-        <button
-          type="button"
-          aria-label="뒤로 가기"
-          onClick={() => navigate(ROUTES.home)}
-          className="flex h-10 w-8 items-center text-herb"
-        >
-          <BackIcon className="w-[19px]" />
-        </button>
-        <h1 className="text-[18px] font-bold text-herb">내 숲</h1>
-      </header>
+      <Header />
 
       {/* 숲 풍경 */}
       <section className="mt-[14px] overflow-hidden rounded-card bg-avocado-100 px-[18px] pt-5">
@@ -114,11 +112,11 @@ export default function ForestPage() {
         <div className="flex items-center justify-between">
           <p className="text-[15px] font-bold text-apricot-800">키우는 중</p>
           <p className="text-[15px] font-bold text-apricot-700">
-            <span aria-hidden>🌰</span> {GROWING_ACORNS} / {ACORNS_PER_TREE}
+            <span aria-hidden>🌰</span> {growingAcorns} / {ACORNS_PER_TREE}
           </p>
         </div>
         <ProgressBar
-          value={GROWING_ACORNS}
+          value={growingAcorns}
           max={ACORNS_PER_TREE}
           className="mt-2"
           trackClass="bg-coconut-100"
@@ -173,6 +171,23 @@ export default function ForestPage() {
         />
       )}
     </>
+  )
+}
+
+function Header() {
+  const navigate = useNavigate()
+  return (
+    <header className="flex items-center">
+      <button
+        type="button"
+        aria-label="뒤로 가기"
+        onClick={() => navigate(ROUTES.home)}
+        className="flex h-10 w-8 items-center text-herb"
+      >
+        <BackIcon className="w-[19px]" />
+      </button>
+      <h1 className="text-[18px] font-bold text-herb">내 숲</h1>
+    </header>
   )
 }
 
