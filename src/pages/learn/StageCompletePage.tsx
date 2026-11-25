@@ -63,7 +63,7 @@ export default function StageCompletePage() {
     <div className="flex flex-1 flex-col gap-gap">
       <div aria-hidden className="h-[85px] shrink-0" />
       <div className="flex justify-center">
-        <Character width={171} />
+        <Character width={171} pose="acorn" />
       </div>
       <h1 className="text-center text-[26px] leading-[1.4] font-black text-herb">
         {SECTORS[sector].label} {stage}단계 완수!

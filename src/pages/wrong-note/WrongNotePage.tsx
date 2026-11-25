@@ -167,7 +167,7 @@ export default function WrongNotePage() {
       {data &&
         (data.items.length === 0 ? (
           <div className="flex flex-col items-center gap-3 px-4 pt-12 pb-12 text-center">
-            <Character width={96} />
+            <Character width={96} pose="think" />
             <p className="text-[17px] leading-[1.4] font-bold text-herb">
               이 주에는 틀린 문제가 없어요
             </p>
