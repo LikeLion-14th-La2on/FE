@@ -32,11 +32,8 @@ const loadMyPage = async (signal: AbortSignal) => {
   return { me, stats, home }
 }
 
-/**
- * 닉네임 수정 버튼을 보여 줄지
- * TODO: 닉네임 수정 API(PATCH /users/me/nickname)가 실서버에 나오면 true로 (시트 · API 연결은 이미 되어 있음)
- */
-const NICKNAME_EDIT_ENABLED = false
+/** 닉네임 수정 버튼을 보여 줄지 */
+const NICKNAME_EDIT_ENABLED = true
 
 /** 스트릭 보호권: 도토리 5개에 1개, 최대 2개까지 가질 수 있다 */
 const SHIELD_PRICE = 5
