@@ -61,7 +61,7 @@ export default function LevelTestResultPage() {
       <PageHeader onBack={() => navigate(ROUTES.home, { replace: true })} />
 
       <div className="flex justify-center">
-        <Character width={137} />
+        <Character width={137} pose="cheer" />
       </div>
       <h1 className="text-center text-[22px] leading-[1.4] font-black text-herb">
         이 단계부터 시작해요!

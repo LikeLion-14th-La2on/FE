@@ -2,7 +2,7 @@
 import { useLocation, useNavigate } from 'react-router'
 
 import { getMe } from '@/api/user'
-import squirrelWelcome from '@/assets/squirrel.webp'
+import squirrelCheer from '@/assets/squirrel-cheer.webp'
 import { Button } from '@/components/common'
 import BackIcon from '@/components/icons/BackIcon'
 import { useApi } from '@/hooks/useApi'
@@ -51,7 +51,8 @@ export default function LevelTestIntroPage() {
         </ul>
       </div>
 
-      <img src={squirrelWelcome} alt="" className="mx-auto mt-[62px] w-[199px]" />
+      {/* 화이팅 다람쥐: 기존 그림과 같은 높이(218)로 맞춰 배치가 바뀌지 않게 */}
+      <img src={squirrelCheer} alt="" className="mx-auto mt-[62px] h-[218px] w-auto" />
 
       <Button
         className="mt-14 enabled:bg-avocado-500 enabled:shadow-[0_4px_0_var(--color-avocado-700)]"

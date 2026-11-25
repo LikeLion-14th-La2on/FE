@@ -1,7 +1,7 @@
 /**
  * 나무 수확: 나무가 다 자란 날(단계 완수 응답 treeCompleted) 단계 완수 화면에서 넘어오는 화면
- * - 위 카드: 다 자란 나무 + 꼭대기의 다람쥐 + 수확 보너스
- * - 아래 카드: 이어서 키울 나무 (같은 계절이면 같은 계절 나무, 다람쥐는 맨 아래에서 다시 시작)
+ * - 위 카드: 다 자란 나무 + 수확 보너스
+ * - 아래 카드: 이어서 키울 나무 (같은 계절이면 같은 계절 나무)
  * Figma 975 → 390 (÷2.5)
  */
 import clsx from 'clsx'
@@ -13,7 +13,7 @@ import acorn15 from '@/assets/acorn/acorn-15.svg'
 import acorn45 from '@/assets/acorn/acorn-45.svg'
 import acornM15 from '@/assets/acorn/acorn-m15.svg'
 import acornM30 from '@/assets/acorn/acorn-m30.svg'
-import { Card, Character } from '@/components/common'
+import { Card } from '@/components/common'
 import { ACORNS_PER_TREE, getSeason, HARVEST_BONUS, toOrdinal } from '@/constants/tree'
 import { ROUTES } from '@/router/routes'
 
@@ -74,11 +74,6 @@ export default function HarvestPage() {
               style={{ left: `${left}%`, top: `${top}%`, width: `${ACORN_SIZE}%` }}
             />
           ))}
-          {/* 다람쥐: 꼭대기 (TODO: 장착한 캐릭터로 교체) */}
-          {/* Character는 자체가 relative라, 위치는 감싼 칸으로 잡는다 */}
-          <div className="absolute -top-5 right-[16px]">
-            <Character width={46} />
-          </div>
         </div>
 
         {/* 홈 '학습 시작' 버튼처럼 아래 그림자 + 누르면 눌림, 받고 나면 홈으로 */}
@@ -90,7 +85,7 @@ export default function HarvestPage() {
           <span aria-hidden>🌰</span>+{HARVEST_BONUS} 도토리 획득
         </button>
         <p className="mt-3 text-center text-[15px] font-medium text-herb-300">
-          다람쥐가 꼭대기에 닿았어요
+          도토리 {ACORNS_PER_TREE}개를 다 모았어요
         </p>
       </section>
 
@@ -101,10 +96,6 @@ export default function HarvestPage() {
         </h2>
         <div className="relative mx-auto mt-3 w-[160px]">
           <img src={season.image} alt={`${season.name} 나무`} className="w-full" />
-          {/* 다람쥐: 줄기 맨 아래에서 다시 시작 */}
-          <div className="absolute right-[30px] bottom-0">
-            <Character width={34} />
-          </div>
         </div>
         <p className="mt-3 text-center text-sub text-herb-300">
           내일부터 도토리 {ACORNS_PER_TREE}개를 다시 모아요
