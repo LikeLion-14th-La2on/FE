@@ -3,7 +3,7 @@
  * - default : coconut-100 + 카드 그림자, 15 Medium herb
  * - selected: apricot-100 + apricot-500 테두리, 15 Bold apricot-800
  * - correct : avocado-100 + avocado-500 테두리, 15 Medium herb + ✓
- * - wrong   : burnt-orange-100 + burnt-orange-500 테두리, 15 Bold burnt-orange-700 + ✕
+ * - wrong   : burnt-orange-200 + burnt-orange-500 테두리, 15 Bold burnt-orange-700 + ✕
  */
 import clsx from 'clsx'
 import type { ButtonHTMLAttributes } from 'react'
@@ -14,7 +14,7 @@ const STATE_CLASS: Record<QuizOptionState, string> = {
   default: 'border-transparent bg-coconut-100 font-medium text-herb shadow-card',
   selected: 'border-apricot-500 bg-apricot-100 font-bold text-apricot-800',
   correct: 'border-avocado-500 bg-avocado-100 font-medium text-herb',
-  wrong: 'border-burnt-orange-500 bg-burnt-orange-100 font-bold text-burnt-orange-700',
+  wrong: 'border-burnt-orange-500 bg-burnt-orange-200 font-bold text-burnt-orange-700',
 }
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & { state?: QuizOptionState }
