@@ -17,13 +17,20 @@ import { Card, Character } from '@/components/common'
 import { ACORNS_PER_TREE, getSeason, HARVEST_BONUS, toOrdinal } from '@/constants/tree'
 import { ROUTES } from '@/router/routes'
 
-/** 단계 완수 화면이 단계 완수 응답에서 넘겨주는 값 (수확 보너스가 더해진 도토리 · 연속 학습일) */
-export type HarvestState = { acornBalance: number; streak: number }
+/**
+ * 단계 완수 화면이 단계 완수 응답에서 넘겨주는 값
+ * - 수확 보너스가 더해진 도토리 · 연속 학습일
+ * - treeCount(몇 번째 나무) · treeBonus(보너스 도토리)는 백엔드 추가 예정이라, 없으면 기본값
+ */
+export type HarvestState = {
+  acornBalance: number
+  streak: number
+  treeCount?: number
+  treeBonus?: number
+}
 
 // 주소로 바로 들어왔을 때(state 없음) 보여 줄 값
 const FALLBACK: HarvestState = { acornBalance: 0, streak: 0 }
-// TODO: 몇 번째 나무인지는 단계 완수 응답에 없어서 목업 (백엔드에 수확한 나무 번호 요청)
-const HARVESTED_TREE_NO = 1
 
 /** 도토리 7자리 (나무 이미지 기준 %, 홈 배치와 같은 기준) + 바깥쪽일수록 바깥으로 기운 도토리 */
 const ACORN_SPOTS = [
@@ -39,7 +46,12 @@ const ACORN_SIZE = 17.7 // 나무 폭 대비 %
 
 export default function HarvestPage() {
   const navigate = useNavigate()
-  const { acornBalance, streak } = (useLocation().state as HarvestState | null) ?? FALLBACK
+  const {
+    acornBalance,
+    streak,
+    treeCount = 1,
+    treeBonus = HARVEST_BONUS,
+  } = (useLocation().state as HarvestState | null) ?? FALLBACK
   // 같은 계절 안에서는 같은 계절 나무: 수확한 나무도, 이어서 키울 나무도 지금 계절
   const season = getSeason()
 
@@ -60,7 +72,7 @@ export default function HarvestPage() {
       {/* 수확한 나무 */}
       <section className="rounded-[24px] bg-apricot-200 px-gutter pt-[22px] pb-7 shadow-[0_6px_0_var(--color-apricot-300)]">
         <h2 className="text-center text-[20px] font-black text-apricot-700">
-          <span aria-hidden>🎉</span> {toOrdinal(HARVESTED_TREE_NO)} 나무 수확!
+          <span aria-hidden>🎉</span> {toOrdinal(treeCount)} 나무 수확!
         </h2>
 
         <div className="relative mx-auto mt-4 w-[216px]">
@@ -87,7 +99,7 @@ export default function HarvestPage() {
           onClick={() => navigate(ROUTES.home, { replace: true })}
           className="mx-auto mt-6 flex h-[43px] w-fit items-center gap-1.5 rounded-[14px] bg-coconut-100 px-5 text-[18px] font-black text-apricot-700 shadow-[0_4px_0_var(--color-coconut-600)] transition-[transform,box-shadow] duration-75 active:translate-y-1 active:shadow-none"
         >
-          <span aria-hidden>🌰</span>+{HARVEST_BONUS} 도토리 획득
+          <span aria-hidden>🌰</span>+{treeBonus} 도토리 획득
         </button>
         <p className="mt-3 text-center text-[15px] font-medium text-herb-300">
           다람쥐가 꼭대기에 닿았어요

@@ -97,7 +97,12 @@ export default function StageCompletePage() {
         {r?.treeCompleted ? (
           <Button
             onClick={() => {
-              const harvest: HarvestState = { acornBalance: r.acornBalance, streak: r.streak }
+              const harvest: HarvestState = {
+                acornBalance: r.acornBalance,
+                streak: r.streak,
+                treeCount: r.treeCount,
+                treeBonus: r.treeBonus,
+              }
               navigate(ROUTES.harvest, { replace: true, state: harvest })
             }}
           >
