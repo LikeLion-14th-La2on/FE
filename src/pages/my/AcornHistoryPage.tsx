@@ -14,16 +14,16 @@ import { useApi } from '@/hooks/useApi'
 import { ROUTES } from '@/router/routes'
 
 /**
- * 내역 사유 코드 → 화면 문구 (명세 · 리뷰로 받은 코드만, 모르는 코드는 받음 · 사용으로)
- * TODO: 백엔드에 사유 코드 전체 목록 받으면 채우기
+ * 내역 사유 코드 → 화면 문구 (백엔드에서 받은 코드 전체, 모르는 코드가 오면 받음 · 사용으로)
+ * - DAILY_STUDY +1 · TREE_COMPLETE +5 · STREAK_BREAK -1 · STREAK_SHIELD -5 · AI_TUTOR -1 · CHARACTER 가격만큼 -
  */
 const REASON_LABEL: Record<string, string> = {
   DAILY_STUDY: '오늘 학습 완료',
-  AI_TUTOR: 'AI 튜터 질문',
-  STREAK_SHIELD: '스트릭 보호권 구매',
-  CHARACTER: '캐릭터 구매',
+  TREE_COMPLETE: '나무 수확',
   STREAK_BREAK: '연속 학습이 끊겨 떨어짐',
-  TREE_COMPLETE: '나무 완성',
+  STREAK_SHIELD: '스트릭 보호권 구매',
+  AI_TUTOR: 'AI 튜터 질문 (무료 횟수 초과)',
+  CHARACTER: '캐릭터 구매',
 }
 
 const reasonText = (reason: string, amount: number) =>
