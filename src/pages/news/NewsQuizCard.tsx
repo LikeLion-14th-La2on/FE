@@ -38,7 +38,7 @@ export default function NewsQuizCard() {
 
   if (quiz.status === 'loading') {
     return (
-      <section className="flex h-[180px] items-center justify-center rounded-[24px] bg-apricot-100 text-[13px] leading-[1.4] text-avocado-400">
+      <section className="flex h-[180px] items-center justify-center rounded-[24px] bg-burnt-orange-200 text-[13px] leading-[1.4] text-avocado-400">
         시사 퀴즈를 불러오고 있어요 · · ·
       </section>
     )
@@ -46,7 +46,7 @@ export default function NewsQuizCard() {
   if (quiz.status === 'error') {
     if (quiz.error.status === 404) {
       return (
-        <section className="flex flex-col items-center gap-1.5 rounded-[24px] bg-apricot-100 px-4 py-8 text-center">
+        <section className="flex flex-col items-center gap-1.5 rounded-[24px] bg-burnt-orange-200 px-4 py-8 text-center">
           <p className="text-[16px] leading-[1.4] font-bold text-herb">
             아직 등록된 시사 퀴즈가 없어요
           </p>
@@ -97,7 +97,7 @@ function QuizBody({ quiz }: { quiz: NewsQuiz }) {
         : `아쉬워요, 정답은 ${CIRCLED[Number(result.correctAnswer)] ?? ''}번 ${withIeyo(choices[Number(result.correctAnswer)] ?? '')}.`
 
   return (
-    <section className="flex flex-col gap-3 rounded-[24px] bg-apricot-100 p-[22px]">
+    <section className="flex flex-col gap-3 rounded-[24px] bg-burnt-orange-200 p-[22px]">
       <div className="flex items-center justify-between gap-2">
         <span className="rounded-full bg-apricot-600 px-3 py-[5px] text-[12px] leading-[1.4] font-bold text-coconut-500">
           오늘의 시사 퀴즈
