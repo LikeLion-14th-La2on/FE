@@ -1,6 +1,6 @@
 # 도토리치 (La2on)
 
-**배포 주소**: 준비 중
+**배포 주소**: https://dotorich.hufsglobalikelion.co.kr
 
 ## 시작하기
 
